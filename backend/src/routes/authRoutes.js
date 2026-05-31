@@ -4,23 +4,37 @@ import {
   registerUser,
   loginUser,
   getUsers,
+  verifyEmail,
+  resendVerificationEmail,
+  forgotPassword,
+  resetPassword,
 } from "../controllers/authController.js";
 
 const router = express.Router();
 
+/* AUTH */
+router.post("/register", registerUser);
+router.post("/login", loginUser);
+
+/* EMAIL VERIFICATION */
+router.get("/verify-email/:token", verifyEmail);
 router.post(
-  "/register",
-  registerUser
+  "/resend-verification",
+  resendVerificationEmail
+);
+
+/* PASSWORD RESET */
+router.post(
+  "/forgot-password",
+  forgotPassword
 );
 
 router.post(
-  "/login",
-  loginUser
+  "/reset-password/:token",
+  resetPassword
 );
 
-router.get(
-  "/users",
-  getUsers
-);
+/* USERS */
+router.get("/users", getUsers);
 
 export default router;

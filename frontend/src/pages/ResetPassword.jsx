@@ -3,38 +3,33 @@ import React, {
 } from "react";
 
 import {
-  Link,
+  useParams,
   useNavigate,
 } from "react-router-dom";
 
 import API from "../utils/axios";
 
-export default function Register() {
+export default function ResetPassword() {
+  const { token } = useParams();
+
   const navigate = useNavigate();
+
+  const [password, setPassword] =
+    useState("");
+
+  const [
+    confirmPassword,
+    setConfirmPassword,
+  ] = useState("");
 
   const [loading, setLoading] =
     useState(false);
 
+  const [message, setMessage] =
+    useState("");
+
   const [error, setError] =
     useState("");
-
-  const [success, setSuccess] =
-    useState("");
-
-  const [formData, setFormData] =
-    useState({
-      name: "",
-      email: "",
-      password: "",
-    });
-
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]:
-        e.target.value,
-    });
-  };
 
   const isStrongPassword = (
     password
@@ -47,15 +42,20 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (loading) return;
-
     setError("");
-    setSuccess("");
+    setMessage("");
 
     if (
-      !isStrongPassword(
-        formData.password
-      )
+      password !== confirmPassword
+    ) {
+      setError(
+        "Passwords do not match"
+      );
+      return;
+    }
+
+    if (
+      !isStrongPassword(password)
     ) {
       setError(
         "Password must contain at least 8 characters, one uppercase letter, one lowercase letter and one number"
@@ -68,11 +68,13 @@ export default function Register() {
     try {
       const { data } =
         await API.post(
-          "/auth/register",
-          formData
+          `/auth/reset-password/${token}`,
+          {
+            password,
+          }
         );
 
-      setSuccess(data.message);
+      setMessage(data.message);
 
       setTimeout(() => {
         navigate("/login");
@@ -81,7 +83,7 @@ export default function Register() {
       setError(
         error.response?.data
           ?.message ||
-          "Something went wrong"
+          "Reset failed"
       );
     } finally {
       setLoading(false);
@@ -94,7 +96,7 @@ export default function Register() {
         className="auth-box"
         onSubmit={handleSubmit}
       >
-        <h2>Register</h2>
+        <h2>Reset Password</h2>
 
         {error && (
           <div className="error-message">
@@ -102,33 +104,33 @@ export default function Register() {
           </div>
         )}
 
-        {success && (
+        {message && (
           <div className="success-message">
-            {success}
+            {message}
           </div>
         )}
 
         <input
-          type="text"
-          placeholder="Name"
-          name="name"
-          onChange={handleChange}
-          required
-        />
-
-        <input
-          type="email"
-          placeholder="Email"
-          name="email"
-          onChange={handleChange}
+          type="password"
+          placeholder="New Password"
+          value={password}
+          onChange={(e) =>
+            setPassword(
+              e.target.value
+            )
+          }
           required
         />
 
         <input
           type="password"
-          placeholder="Password"
-          name="password"
-          onChange={handleChange}
+          placeholder="Confirm Password"
+          value={confirmPassword}
+          onChange={(e) =>
+            setConfirmPassword(
+              e.target.value
+            )
+          }
           required
         />
 
@@ -153,16 +155,9 @@ export default function Register() {
           {loading ? (
             <div className="spinner"></div>
           ) : (
-            "Register"
+            "Reset Password"
           )}
         </button>
-
-        <p>
-          Already have account?{" "}
-          <Link to="/login">
-            Login
-          </Link>
-        </p>
       </form>
     </div>
   );

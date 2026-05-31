@@ -1,40 +1,26 @@
-import React, {
-  useState,
-  useContext,
-} from "react";
-
-import {
-  Link,
-  useNavigate,
-} from "react-router-dom";
-
+import React, { useState, useContext } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import API from "../utils/axios";
-
 import { AuthContext } from "../context/AuthContext";
 
 export default function Login() {
   const navigate = useNavigate();
+  const { loginUser } = useContext(AuthContext);
 
-  const { loginUser } =
-    useContext(AuthContext);
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
 
-  const [loading, setLoading] =
-    useState(false);
-
-  const [error, setError] =
-    useState("");
-
-  const [formData, setFormData] =
-    useState({
-      email: "",
-      password: "",
-    });
+  const [loading, setLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
-      [e.target.name]:
-        e.target.value,
+      [e.target.name]: e.target.value,
     });
   };
 
@@ -44,27 +30,56 @@ export default function Login() {
     if (loading) return;
 
     setLoading(true);
-
     setError("");
+    setMessage("");
 
     try {
-      const { data } =
-        await API.post(
-          "/auth/login",
-          formData
-        );
+      const { data } = await API.post(
+        "/auth/login",
+        formData
+      );
 
       loginUser(data);
 
       navigate("/chat");
     } catch (error) {
       setError(
-        error.response?.data
-          ?.message ||
-          "Something went wrong"
+        error.response?.data?.message ||
+          "Login failed"
       );
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (!formData.email) {
+      setError(
+        "Enter email to resend verification"
+      );
+      return;
+    }
+
+    setResendLoading(true);
+    setError("");
+    setMessage("");
+
+    try {
+      const { data } = await API.post(
+        "/auth/resend-verification",
+        {
+          email: formData.email,
+        }
+      );
+
+      setMessage(data.message);
+    } catch (error) {
+      setError(
+        error.response?.data?.message ||
+          "Failed to resend email"
+      );
+    } finally {
+      setResendLoading(false);
     }
   };
 
@@ -79,6 +94,12 @@ export default function Login() {
         {error && (
           <div className="error-message">
             {error}
+          </div>
+        )}
+
+        {message && (
+          <div className="success-message">
+            {message}
           </div>
         )}
 
@@ -108,6 +129,27 @@ export default function Login() {
             "Login"
           )}
         </button>
+
+        <button
+          type="button"
+          onClick={handleResend}
+          disabled={resendLoading}
+          style={{
+            background: "transparent",
+            border: "1px solid #00a884",
+            color: "#00a884",
+          }}
+        >
+          {resendLoading
+            ? "Sending..."
+            : "Resend Verification Email"}
+        </button>
+
+        <p>
+          <Link to="/forgot-password">
+            Forgot Password?
+          </Link>
+        </p>
 
         <p>
           New user?{" "}

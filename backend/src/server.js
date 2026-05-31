@@ -1,24 +1,23 @@
 import express from "express";
-import dotenv from "dotenv";
 import cors from "cors";
+import dotenv from "dotenv";
 
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 
-dotenv.config();
+/* ================= ENV LOAD ================= */
+dotenv.config({ path: "./.env" });
 
+/* ================= DB ================= */
 connectDB();
 
 const app = express();
 
-/* Middlewares */
-
+/* ================= MIDDLEWARE ================= */
 app.use(cors());
-
 app.use(express.json());
 
-/* Routes */
-
+/* ================= ROUTES ================= */
 app.use("/api/auth", authRoutes);
 
 app.get("/", (req, res) => {

@@ -439,3 +439,53 @@ button:disabled {
     font-size: 14px;
   }
 }
+/* =========================
+   SUCCESS MESSAGE
+========================= */
+
+.success-message {
+  background: rgba(0, 168, 132, 0.15);
+
+  color: #00d9a6;
+
+  padding: 10px;
+
+  border-radius: 8px;
+
+  text-align: center;
+
+  font-size: 14px;
+}
+
+/* =========================
+   VERIFY PAGE
+========================= */
+
+.verify-loader {
+  display: flex;
+
+  justify-content: center;
+
+  padding: 20px 0;
+}
+.success-message {
+  background: rgba(0, 168, 132, 0.15);
+  color: #00a884;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  text-align: center;
+}
+.success-message {
+  background: rgba(0, 168, 132, 0.15);
+
+  color: #00d4aa;
+
+  padding: 10px;
+
+  border-radius: 8px;
+
+  font-size: 14px;
+
+  text-align: center;
+}

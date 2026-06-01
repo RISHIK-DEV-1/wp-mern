@@ -8,7 +8,7 @@ import {
 } from "react-router-dom";
 
 import API from "../utils/axios";
-
+import "./ResetPassword.css";
 export default function ResetPassword() {
   const { token } = useParams();
 
@@ -134,13 +134,7 @@ export default function ResetPassword() {
           required
         />
 
-        <small
-          style={{
-            color: "#666",
-            marginBottom: "10px",
-            display: "block",
-          }}
-        >
+        <small className="password-hint">
           Password must contain:
           8+ characters,
           1 uppercase letter,

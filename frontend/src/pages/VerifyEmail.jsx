@@ -9,7 +9,7 @@ import {
 } from "react-router-dom";
 
 import API from "../utils/axios";
-
+import "./VerifyEmail.css";
 export default function VerifyEmail() {
   const { token } = useParams();
 

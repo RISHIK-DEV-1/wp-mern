@@ -7,7 +7,7 @@ import React, {
 import API from "../utils/axios";
 
 import { AuthContext } from "../context/AuthContext";
-
+import "./Sidebar.css";
 export default function Sidebar({
   selectedUser,
   setSelectedUser,
@@ -51,46 +51,29 @@ export default function Sidebar({
       <h3>Chats</h3>
 
       {loading ? (
-        <div
-          style={{
-            padding: "20px",
-          }}
-        >
-          Loading users...
-        </div>
+        <div className="sidebar-message">
+  Loading users...
+</div>
       ) : users.length === 0 ? (
-        <div
-          style={{
-            padding: "20px",
-          }}
-        >
-          No users found
-        </div>
+        <div className="sidebar-message">
+  No users found
+</div>
       ) : (
         users.map((u) => (
           <div
             key={u._id}
-            className="sidebar-chat"
+            className={`sidebar-chat ${
+  selectedUser?._id === u._id
+    ? "active"
+    : ""
+}`}
             onClick={() =>
               setSelectedUser(u)
             }
-            style={{
-              background:
-                selectedUser?._id ===
-                u._id
-                  ? "#202c33"
-                  : "transparent",
-            }}
           >
             <h4>{u.name}</h4>
 
-            <p
-              style={{
-                fontSize: "13px",
-                opacity: 0.7,
-                marginTop: "4px",
-              }}
-            >
+            <p className="sidebar-email">
               {u.email}
             </p>
           </div>

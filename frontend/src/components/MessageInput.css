@@ -1,0 +1,88 @@
+/* =========================
+   MESSAGE INPUT
+========================= */
+
+.message-input {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  padding: 12px;
+
+  background: #202c33;
+
+  border-top: 1px solid #2a3942;
+}
+
+.message-input input {
+  flex: 1;
+
+  padding: 12px;
+
+  border: none;
+  outline: none;
+
+  border-radius: 8px;
+
+  background: #2a3942;
+
+  color: white;
+
+  font-size: 15px;
+}
+
+.message-input input::placeholder {
+  color: #b0b3b8;
+}
+
+.message-input button {
+  width: auto;
+
+  padding: 12px 20px;
+
+  border: none;
+
+  border-radius: 8px;
+
+  background: #00a884;
+
+  color: white;
+
+  cursor: pointer;
+
+  font-weight: bold;
+
+  transition: 0.2s ease;
+}
+
+.message-input button:hover {
+  background: #019270;
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 700px) {
+  .message-input {
+    padding: 10px;
+  }
+
+  .message-input button {
+    padding: 10px 16px;
+  }
+}
+
+/* =========================
+   SMALL MOBILE
+========================= */
+
+@media (max-width: 450px) {
+  .message-input input,
+  .message-input button {
+    font-size: 14px;
+  }
+}

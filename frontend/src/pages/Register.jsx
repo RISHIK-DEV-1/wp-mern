@@ -8,7 +8,7 @@ import {
 } from "react-router-dom";
 
 import API from "../utils/axios";
-
+import "./Register.css";
 export default function Register() {
   const navigate = useNavigate();
 
@@ -132,13 +132,7 @@ export default function Register() {
           required
         />
 
-        <small
-          style={{
-            color: "#666",
-            marginBottom: "10px",
-            display: "block",
-          }}
-        >
+        <small className="password-hint">
           Password must contain:
           8+ characters,
           1 uppercase letter,

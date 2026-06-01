@@ -2,7 +2,7 @@ import React, { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import API from "../utils/axios";
 import { AuthContext } from "../context/AuthContext";
-
+import "./Login.css";
 export default function Login() {
   const navigate = useNavigate();
   const { loginUser } = useContext(AuthContext);
@@ -131,15 +131,11 @@ export default function Login() {
         </button>
 
         <button
-          type="button"
-          onClick={handleResend}
-          disabled={resendLoading}
-          style={{
-            background: "transparent",
-            border: "1px solid #00a884",
-            color: "#00a884",
-          }}
-        >
+  type="button"
+  onClick={handleResend}
+  disabled={resendLoading}
+  className="resend-btn"
+>
           {resendLoading
             ? "Sending..."
             : "Resend Verification Email"}

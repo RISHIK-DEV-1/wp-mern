@@ -1,5 +1,5 @@
 import React from "react";
-
+import "./ChatHeader.css";
 export default function ChatHeader({
   selectedUser,
 }) {

@@ -5,7 +5,7 @@ import React, {
 import Sidebar from "../components/Sidebar";
 
 import ChatWindow from "../components/ChatWindow";
-
+import "./Chat.css";
 export default function Chat() {
   const [
     selectedUser,

@@ -1,0 +1,35 @@
+/* =========================
+   CHAT HEADER
+========================= */
+
+.chat-header {
+  width: 100%;
+
+  padding: 15px 20px;
+
+  background: #202c33;
+
+  border-bottom: 1px solid #2a3942;
+
+  display: flex;
+  align-items: center;
+}
+
+.chat-header h4 {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 450px) {
+  .chat-header {
+    padding: 12px;
+  }
+
+  .chat-header h4 {
+    font-size: 15px;
+  }
+}

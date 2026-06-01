@@ -1,10 +1,15 @@
 import React from "react";
 
+import "./MessageList.css";
+
 export default function MessageList() {
   return (
     <div className="messages">
-      <div style={{ margin: "5px 0" }}>Hello 👋</div>
-      <div style={{ margin: "5px 0", textAlign: "right" }}>
+      <div className="message received">
+        Hello 👋
+      </div>
+
+      <div className="message sent">
         Hi there!
       </div>
     </div>

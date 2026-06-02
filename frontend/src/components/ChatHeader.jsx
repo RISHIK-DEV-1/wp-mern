@@ -1,19 +1,30 @@
 import React from "react";
 import "./ChatHeader.css";
+
 export default function ChatHeader({
   selectedUser,
+  setSelectedUser,
 }) {
   return (
     <div className="chat-header">
-      {selectedUser ? (
+      <button
+        className="back-btn"
+        onClick={() =>
+          setSelectedUser?.(null)
+        }
+      >
+        ←
+      </button>
+
+      <div className="chat-header-info">
         <h4>
-          {selectedUser.name}
+          {selectedUser?.name}
         </h4>
-      ) : (
-        <h4>
-          Select a chat
-        </h4>
-      )}
+
+        <p>
+          {selectedUser?.email}
+        </p>
+      </div>
     </div>
   );
 }

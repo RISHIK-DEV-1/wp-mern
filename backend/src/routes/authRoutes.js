@@ -1,21 +1,27 @@
 import express from "express";
-
 import {
   registerUser,
   loginUser,
-  getUsers,
+  googleLogin,
   verifyEmail,
   resendVerificationEmail,
+} from "../controllers/authController.js";
+
+import {
   forgotPassword,
   resetPassword,
-} from "../controllers/authController.js";
+} from "../controllers/passwordController.js";
+
+import {
+  getUsers,
+} from "../controllers/userController.js";
 
 const router = express.Router();
 
 /* AUTH */
 router.post("/register", registerUser);
 router.post("/login", loginUser);
-
+router.post("/google-login", googleLogin);
 /* EMAIL VERIFICATION */
 router.get("/verify-email/:token", verifyEmail);
 router.post(

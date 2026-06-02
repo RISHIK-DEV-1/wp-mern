@@ -1,26 +1,56 @@
-import React, { useState, useContext } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, {
+  useState,
+  useContext,
+} from "react";
+
+import {
+  Link,
+  useNavigate,
+} from "react-router-dom";
+
+import {
+  GoogleLogin,
+} from "@react-oauth/google";
+
 import API from "../utils/axios";
-import { AuthContext } from "../context/AuthContext";
+
+import {
+  AuthContext,
+} from "../context/AuthContext";
+
 import "./Login.css";
+
 export default function Login() {
   const navigate = useNavigate();
-  const { loginUser } = useContext(AuthContext);
 
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const { loginUser } =
+    useContext(AuthContext);
 
-  const [loading, setLoading] = useState(false);
-  const [resendLoading, setResendLoading] = useState(false);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+  const [formData, setFormData] =
+    useState({
+      email: "",
+      password: "",
+    });
+
+  const [loading, setLoading] =
+    useState(false);
+
+  const [
+    resendLoading,
+    setResendLoading,
+  ] = useState(false);
+
+  const [message, setMessage] =
+    useState("");
+
+  const [error, setError] =
+    useState("");
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [e.target.name]:
+        e.target.value,
     });
   };
 
@@ -34,23 +64,51 @@ export default function Login() {
     setMessage("");
 
     try {
-      const { data } = await API.post(
-        "/auth/login",
-        formData
-      );
+      const { data } =
+        await API.post(
+          "/auth/login",
+          formData
+        );
 
       loginUser(data);
 
       navigate("/chat");
     } catch (error) {
       setError(
-        error.response?.data?.message ||
+        error.response?.data
+          ?.message ||
           "Login failed"
       );
     } finally {
       setLoading(false);
     }
   };
+
+  const handleGoogleLogin =
+    async (
+      credentialResponse
+    ) => {
+      try {
+        const { data } =
+          await API.post(
+            "/auth/google-login",
+            {
+              credential:
+                credentialResponse.credential,
+            }
+          );
+
+        loginUser(data);
+
+        navigate("/chat");
+      } catch (error) {
+        setError(
+          error.response?.data
+            ?.message ||
+            "Google login failed"
+        );
+      }
+    };
 
   const handleResend = async () => {
     if (!formData.email) {
@@ -65,17 +123,20 @@ export default function Login() {
     setMessage("");
 
     try {
-      const { data } = await API.post(
-        "/auth/resend-verification",
-        {
-          email: formData.email,
-        }
-      );
+      const { data } =
+        await API.post(
+          "/auth/resend-verification",
+          {
+            email:
+              formData.email,
+          }
+        );
 
       setMessage(data.message);
     } catch (error) {
       setError(
-        error.response?.data?.message ||
+        error.response?.data
+          ?.message ||
           "Failed to resend email"
       );
     } finally {
@@ -130,12 +191,37 @@ export default function Login() {
           )}
         </button>
 
+        {/* Google Login */}
+
+        <div
+          style={{
+            display: "flex",
+            justifyContent:
+              "center",
+            marginTop: "12px",
+            marginBottom: "12px",
+          }}
+        >
+          <GoogleLogin
+            onSuccess={
+              handleGoogleLogin
+            }
+            onError={() =>
+              setError(
+                "Google login failed"
+              )
+            }
+          />
+        </div>
+
         <button
-  type="button"
-  onClick={handleResend}
-  disabled={resendLoading}
-  className="resend-btn"
->
+          type="button"
+          onClick={handleResend}
+          disabled={
+            resendLoading
+          }
+          className="resend-btn"
+        >
           {resendLoading
             ? "Sending..."
             : "Resend Verification Email"}

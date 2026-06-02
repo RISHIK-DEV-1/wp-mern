@@ -1,9 +1,14 @@
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
+import { OAuth2Client } from "google-auth-library";
 
 import User from "../models/User.js";
 import generateToken from "../utils/generateToken.js";
 import sendEmail from "../utils/sendEmail.js";
+
+const googleClient = new OAuth2Client(
+  process.env.GOOGLE_CLIENT_ID
+);
 /* ================= PASSWORD VALIDATION ================= */
 
 const isStrongPassword = (password) => {
@@ -220,156 +225,6 @@ export const resendVerificationEmail =
     }
   };
 
-/* ================= FORGOT PASSWORD ================= */
-
-export const forgotPassword = async (
-  req,
-  res
-) => {
-  try {
-    const { email } = req.body;
-
-    const user = await User.findOne({
-      email,
-    });
-
-    if (!user) {
-      return res.status(404).json({
-        message: "User not found",
-      });
-    }
-
-    const resetToken =
-      crypto.randomBytes(32).toString(
-        "hex"
-      );
-
-    user.resetPasswordToken =
-      resetToken;
-
-    user.resetPasswordExpires =
-      Date.now() +
-      1000 * 60 * 60; // 1 hour
-
-    await user.save();
-
-    const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
-
-    await sendEmail({
-      to: user.email,
-
-      subject: "Reset Password",
-
-      html: `
-        <h2>Password Reset Request</h2>
-
-        <p>Click the button below to reset your password.</p>
-
-        <a
-          href="${resetUrl}"
-          style="
-            display:inline-block;
-            padding:12px 20px;
-            background:#00a884;
-            color:white;
-            text-decoration:none;
-            border-radius:6px;
-          "
-        >
-          Reset Password
-        </a>
-
-        <p>This link expires in 1 hour.</p>
-      `,
-    });
-
-    res.json({
-      message:
-        "Password reset link sent to your email",
-    });
-  } catch (error) {
-    res.status(500).json({
-      message: error.message,
-    });
-  }
-};
-
-/* ================= RESET PASSWORD ================= */
-
-export const resetPassword = async (
-  req,
-  res
-) => {
-  try {
-    const { token } = req.params;
-
-    const { password } = req.body;
-
-    const user = await User.findOne({
-      resetPasswordToken: token,
-
-      resetPasswordExpires: {
-        $gt: Date.now(),
-      },
-    });
-
-    if (!user) {
-      return res.status(400).json({
-        message:
-          "Invalid or expired reset link",
-      });
-    }
-
-    /* Password strength validation */
-
-if (!isStrongPassword(password)) {
-  return res.status(400).json({
-    message:
-      "Password must contain at least 8 characters, one uppercase letter, one lowercase letter and one number",
-  });
-}
-
-    /* New password must not be same as old password */
-
-    const isSamePassword =
-      await bcrypt.compare(
-        password,
-        user.password
-      );
-
-    if (isSamePassword) {
-      return res.status(400).json({
-        message:
-          "New password cannot be the same as old password",
-      });
-    }
-
-    /* Hash new password */
-
-    const salt =
-      await bcrypt.genSalt(10);
-
-    user.password =
-      await bcrypt.hash(
-        password,
-        salt
-      );
-
-    user.resetPasswordToken = null;
-    user.resetPasswordExpires = null;
-
-    await user.save();
-
-    res.json({
-      message:
-        "Password reset successful",
-    });
-  } catch (error) {
-    res.status(500).json({
-      message: error.message,
-    });
-  }
-};
 
 /* ================= LOGIN ================= */
 
@@ -426,23 +281,64 @@ export const loginUser = async (
     });
   }
 };
+/* ================= GOOGLE LOGIN ================= */
 
-/* ================= GET USERS ================= */
-
-export const getUsers = async (
+export const googleLogin = async (
   req,
   res
 ) => {
   try {
-    const users =
-      await User.find().select(
-        "-password"
-      );
+    const { credential } = req.body;
 
-    res.json(users);
+    const ticket =
+      await googleClient.verifyIdToken({
+        idToken: credential,
+        audience:
+          process.env.GOOGLE_CLIENT_ID,
+      });
+
+    const payload =
+      ticket.getPayload();
+
+    const {
+      sub,
+      name,
+      email,
+      picture,
+    } = payload;
+
+    let user =
+      await User.findOne({
+        email,
+      });
+
+    if (!user) {
+      user = await User.create({
+        name,
+        email,
+
+        googleId: sub,
+
+        avatar: picture,
+
+        isVerified: true,
+      });
+    }
+
+    res.json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      avatar: user.avatar,
+
+      token: generateToken(
+        user._id
+      ),
+    });
   } catch (error) {
     res.status(500).json({
-      message: error.message,
+      message:
+        "Google login failed",
     });
   }
 };

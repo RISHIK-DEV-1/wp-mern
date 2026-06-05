@@ -7,10 +7,14 @@ import React, {
 import API from "../utils/axios";
 
 import { AuthContext } from "../context/AuthContext";
+
 import "./Sidebar.css";
+
 export default function Sidebar({
   selectedUser,
   setSelectedUser,
+  onlineUsers,
+  typingUser,
 }) {
   const { user } =
     useContext(AuthContext);
@@ -22,26 +26,31 @@ export default function Sidebar({
     useState(true);
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const { data } =
-          await API.get(
-            "/auth/users"
-          );
+    const fetchUsers =
+      async () => {
+        try {
+          const { data } =
+            await API.get(
+              "/auth/users"
+            );
 
-        const filteredUsers =
-          data.filter(
-            (u) =>
-              u._id !== user._id
-          );
+          const filtered =
+            data.filter(
+              (u) =>
+                u._id !==
+                user._id
+            );
 
-        setUsers(filteredUsers);
-      } catch (error) {
-        console.log(error);
-      } finally {
-        setLoading(false);
-      }
-    };
+          setUsers(filtered);
+        } catch (error) {
+  console.error(
+    "Failed to fetch users:",
+    error
+  );
+} finally {
+          setLoading(false);
+        }
+      };
 
     fetchUsers();
   }, [user]);
@@ -52,32 +61,71 @@ export default function Sidebar({
 
       {loading ? (
         <div className="sidebar-message">
-  Loading users...
-</div>
+          Loading users...
+        </div>
       ) : users.length === 0 ? (
         <div className="sidebar-message">
-  No users found
-</div>
+          No users found
+        </div>
       ) : (
-        users.map((u) => (
-          <div
-            key={u._id}
-            className={`sidebar-chat ${
-  selectedUser?._id === u._id
-    ? "active"
-    : ""
-}`}
-            onClick={() =>
-              setSelectedUser(u)
-            }
-          >
-            <h4>{u.name}</h4>
+        users.map((u) => {
+          const isOnline =
+            onlineUsers.includes(
+              u._id
+            );
 
-            <p className="sidebar-email">
-              {u.email}
-            </p>
-          </div>
-        ))
+          const isTyping =
+            typingUser === u._id;
+
+          return (
+            <div
+              key={u._id}
+              className={`sidebar-chat ${
+                selectedUser?._id ===
+                u._id
+                  ? "active"
+                  : ""
+              }`}
+              onClick={() =>
+                setSelectedUser(u)
+              }
+            >
+              <div className="avatar-wrapper">
+                <div className="avatar">
+                  {u.name
+                    ?.charAt(0)
+                    .toUpperCase()}
+                </div>
+
+                <span
+                  className={`status-dot ${
+                    isOnline
+                      ? "online"
+                      : "offline"
+                  }`}
+                />
+              </div>
+
+              <div className="chat-info">
+                <h4>{u.name}</h4>
+
+                <p
+                  className={`sidebar-status ${
+                    isTyping
+                      ? "typing"
+                      : ""
+                  }`}
+                >
+                  {isTyping
+                    ? "typing"
+                    : isOnline
+                    ? "Online"
+                    : "Offline"}
+                </p>
+              </div>
+            </div>
+          );
+        })
       )}
     </div>
   );

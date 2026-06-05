@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 
 import ChatHeader from "./ChatHeader";
 import MessageList from "./MessageList";
@@ -9,7 +9,14 @@ import "./ChatWindow.css";
 export default function ChatWindow({
   selectedUser,
   setSelectedUser,
+  typingUser,
+  onlineUsers,
 }) {
+  const [newMessage, setNewMessage] =
+    useState(null);
+
+  /* ================= EMPTY STATE ================= */
+
   if (!selectedUser) {
     return (
       <div className="welcome-screen">
@@ -26,17 +33,24 @@ export default function ChatWindow({
   return (
     <div className="chat-window">
       <ChatHeader
-        selectedUser={
-          selectedUser
+        selectedUser={selectedUser}
+        setSelectedUser={setSelectedUser}
+        typing={
+          typingUser ===
+          selectedUser?._id
         }
-        setSelectedUser={
-          setSelectedUser
-        }
+        onlineUsers={onlineUsers}
       />
 
-      <MessageList />
+      <MessageList
+        selectedUser={selectedUser}
+        newMessage={newMessage}
+      />
 
-      <MessageInput />
+      <MessageInput
+        selectedUser={selectedUser}
+        onMessageSent={setNewMessage}
+      />
     </div>
   );
 }

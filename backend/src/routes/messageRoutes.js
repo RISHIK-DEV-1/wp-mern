@@ -5,12 +5,16 @@ import {
   getMessages,
   markDelivered,
   markRead,
+  getUnreadCounts,
 } from "../controllers/messageController.js";
 
 const router = express.Router();
 
 router.post("/", sendMessage);
-
+router.get(
+  "/unread/:userId",
+  getUnreadCounts
+);
 router.get(
   "/:senderId/:receiverId",
   getMessages

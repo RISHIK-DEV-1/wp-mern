@@ -73,7 +73,8 @@ export const initSocket = (server) => {
                     "delivered",
                 },
                 {
-                  new: true,
+                  returnDocument:
+                    "after",
                 }
               );
           }
@@ -86,6 +87,12 @@ export const initSocket = (server) => {
             ).emit(
               "receiveMessage",
               updatedMessage
+            );
+
+            io.to(
+              receiverSocketId
+            ).emit(
+              "unreadCountUpdated"
             );
           }
 
@@ -125,7 +132,8 @@ export const initSocket = (server) => {
                 status: "read",
               },
               {
-                new: true,
+                returnDocument:
+                  "after",
               }
             );
 
@@ -144,6 +152,21 @@ export const initSocket = (server) => {
             ).emit(
               "messageStatusUpdated",
               message
+            );
+          }
+
+          const receiverSocketId =
+            onlineUsers.get(
+              String(
+                message.receiver
+              )
+            );
+
+          if (receiverSocketId) {
+            io.to(
+              receiverSocketId
+            ).emit(
+              "unreadCountUpdated"
             );
           }
         } catch (error) {
@@ -222,7 +245,8 @@ export const initSocket = (server) => {
                         new Date(),
                     },
                     {
-                      new: true,
+                      returnDocument:
+                        "after",
                     }
                   );
 

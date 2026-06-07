@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Message from "../models/Message.js";
 
 /* ================= SEND MESSAGE ================= */
@@ -109,6 +110,54 @@ export const markRead = async (
     }
 
     res.json(message);
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+/* ================= GET UNREAD COUNTS ================= */
+
+export const getUnreadCounts = async (
+  req,
+  res
+) => {
+  try {
+    const { userId } = req.params;
+
+    const unreadMessages =
+      await Message.aggregate([
+        {
+          $match: {
+            receiver:
+              new mongoose.Types.ObjectId(
+                userId
+              ),
+            status: {
+              $ne: "read",
+            },
+          },
+        },
+        {
+          $group: {
+            _id: "$sender",
+            count: {
+              $sum: 1,
+            },
+          },
+        },
+      ]);
+
+    const counts = {};
+
+    unreadMessages.forEach(
+      (item) => {
+        counts[item._id.toString()] =
+          item.count;
+      }
+    );
+
+    res.json(counts);
   } catch (error) {
     res.status(500).json({
       message: error.message,

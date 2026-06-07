@@ -12,8 +12,7 @@ export default function ChatWindow({
   typingUser,
   onlineUsers,
 }) {
-  const [newMessage, setNewMessage] =
-    useState(null);
+  const [messages, setMessages] = useState([]);
 
   /* ================= EMPTY STATE ================= */
 
@@ -21,35 +20,41 @@ export default function ChatWindow({
     return (
       <div className="welcome-screen">
         <h1>WhatsApp MERN</h1>
-
-        <p>
-          Select a chat to start
-          messaging
-        </p>
+        <p>Select a chat to start messaging</p>
       </div>
     );
   }
+
+  /* ================= ADD NEW MESSAGE ================= */
+
+  const handleNewMessage = (message) => {
+    setMessages((prev) => {
+      const exists = prev.some(
+        (m) => m._id === message._id
+      );
+
+      return exists ? prev : [...prev, message];
+    });
+  };
 
   return (
     <div className="chat-window">
       <ChatHeader
         selectedUser={selectedUser}
         setSelectedUser={setSelectedUser}
-        typing={
-          typingUser ===
-          selectedUser?._id
-        }
+        typing={typingUser === selectedUser?._id}
         onlineUsers={onlineUsers}
       />
 
       <MessageList
         selectedUser={selectedUser}
-        newMessage={newMessage}
+        messages={messages}
+        setMessages={setMessages}
       />
 
       <MessageInput
         selectedUser={selectedUser}
-        onMessageSent={setNewMessage}
+        onMessageSent={handleNewMessage}
       />
     </div>
   );

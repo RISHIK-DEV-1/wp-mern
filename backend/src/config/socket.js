@@ -1,4 +1,5 @@
 import { Server } from "socket.io";
+import Message from "../models/Message.js";
 
 const onlineUsers = new Map();
 const offlineTimers = new Map();
@@ -13,45 +14,160 @@ export const initSocket = (server) => {
 
   io.on("connection", (socket) => {
     /* ================= JOIN ================= */
+
     socket.on("join", (userId) => {
       socket.userId = userId;
 
       if (offlineTimers.has(userId)) {
-        clearTimeout(offlineTimers.get(userId));
+        clearTimeout(
+          offlineTimers.get(userId)
+        );
+
         offlineTimers.delete(userId);
       }
 
-      onlineUsers.set(userId, socket.id);
+      onlineUsers.set(
+        String(userId),
+        socket.id
+      );
 
       io.emit(
         "onlineUsers",
-        Array.from(onlineUsers.keys())
+        Array.from(
+          onlineUsers.keys()
+        )
       );
     });
 
     /* ================= SEND MESSAGE ================= */
-    socket.on("sendMessage", (message) => {
-      const receiverSocketId = onlineUsers.get(
-        message.receiver
-      );
 
-      if (receiverSocketId) {
-        io.to(receiverSocketId).emit(
-          "receiveMessage",
-          message
-        );
+    socket.on(
+      "sendMessage",
+      async (message) => {
+        try {
+          const receiverSocketId =
+            onlineUsers.get(
+              String(message.receiver)
+            );
+
+          const senderSocketId =
+            onlineUsers.get(
+              String(message.sender)
+            );
+
+          let updatedMessage =
+            message;
+
+          /* Receiver online -> Delivered */
+
+          if (
+            receiverSocketId &&
+            message.status === "sent"
+          ) {
+            updatedMessage =
+              await Message.findByIdAndUpdate(
+                message._id,
+                {
+                  status:
+                    "delivered",
+                },
+                {
+                  new: true,
+                }
+              );
+          }
+
+          /* Send to receiver */
+
+          if (receiverSocketId) {
+            io.to(
+              receiverSocketId
+            ).emit(
+              "receiveMessage",
+              updatedMessage
+            );
+          }
+
+          /* Update sender instantly */
+
+          if (senderSocketId) {
+            io.to(
+              senderSocketId
+            ).emit(
+              "receiveMessage",
+              updatedMessage
+            );
+
+            io.to(
+              senderSocketId
+            ).emit(
+              "messageStatusUpdated",
+              updatedMessage
+            );
+          }
+        } catch (error) {
+          console.log(error);
+        }
       }
-    });
+    );
+
+    /* ================= MARK READ ================= */
+
+    socket.on(
+      "markRead",
+      async (messageId) => {
+        try {
+          const message =
+            await Message.findByIdAndUpdate(
+              messageId,
+              {
+                status: "read",
+              },
+              {
+                new: true,
+              }
+            );
+
+          if (!message) return;
+
+          const senderSocketId =
+            onlineUsers.get(
+              String(
+                message.sender
+              )
+            );
+
+          if (senderSocketId) {
+            io.to(
+              senderSocketId
+            ).emit(
+              "messageStatusUpdated",
+              message
+            );
+          }
+        } catch (error) {
+          console.log(error);
+        }
+      }
+    );
 
     /* ================= TYPING ================= */
+
     socket.on(
       "typing",
-      ({ sender, receiver }) => {
+      ({
+        sender,
+        receiver,
+      }) => {
         const receiverSocketId =
-          onlineUsers.get(receiver);
+          onlineUsers.get(
+            String(receiver)
+          );
 
         if (receiverSocketId) {
-          io.to(receiverSocketId).emit(
+          io.to(
+            receiverSocketId
+          ).emit(
             "typing",
             { sender }
           );
@@ -60,14 +176,22 @@ export const initSocket = (server) => {
     );
 
     /* ================= STOP TYPING ================= */
+
     socket.on(
       "stopTyping",
-      ({ sender, receiver }) => {
+      ({
+        sender,
+        receiver,
+      }) => {
         const receiverSocketId =
-          onlineUsers.get(receiver);
+          onlineUsers.get(
+            String(receiver)
+          );
 
         if (receiverSocketId) {
-          io.to(receiverSocketId).emit(
+          io.to(
+            receiverSocketId
+          ).emit(
             "stopTyping",
             { sender }
           );
@@ -76,22 +200,38 @@ export const initSocket = (server) => {
     );
 
     /* ================= DISCONNECT ================= */
-    socket.on("disconnect", () => {
-      const userId = socket.userId;
 
-      if (!userId) return;
+    socket.on(
+      "disconnect",
+      () => {
+        const userId =
+          socket.userId;
 
-      const timer = setTimeout(() => {
-        onlineUsers.delete(userId);
-        offlineTimers.delete(userId);
+        if (!userId) return;
 
-        io.emit(
-          "onlineUsers",
-          Array.from(onlineUsers.keys())
+        const timer =
+          setTimeout(() => {
+            onlineUsers.delete(
+              String(userId)
+            );
+
+            offlineTimers.delete(
+              String(userId)
+            );
+
+            io.emit(
+              "onlineUsers",
+              Array.from(
+                onlineUsers.keys()
+              )
+            );
+          }, 5000);
+
+        offlineTimers.set(
+          String(userId),
+          timer
         );
-      }, 5000);
-
-      offlineTimers.set(userId, timer);
-    });
+      }
+    );
   });
 };

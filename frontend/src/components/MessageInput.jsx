@@ -13,85 +13,59 @@ import "./MessageInput.css";
 
 export default function MessageInput({
   selectedUser,
+  onMessageSent,
 }) {
-  const { user } =
-    useContext(AuthContext);
+  const { user } = useContext(AuthContext);
 
-  const [text, setText] =
-    useState("");
-
-  const typingTimeoutRef =
-    useRef(null);
+  const [text, setText] = useState("");
+  const typingTimeoutRef = useRef(null);
 
   /* ================= SEND MESSAGE ================= */
 
   const handleSend = async () => {
-    if (!text.trim() || !selectedUser)
-      return;
+    if (!text.trim() || !selectedUser) return;
 
     try {
-      const { data } =
-        await API.post(
-          "/messages",
-          {
-            sender: user._id,
-            receiver:
-              selectedUser._id,
-            text,
-          }
-        );
+      const { data } = await API.post("/messages", {
+        sender: user._id,
+        receiver: selectedUser._id,
+        text,
+      });
 
-      socket.emit(
-        "sendMessage",
-        data
-      );
+      /* ✅ FIX: instantly update UI */
+      onMessageSent?.(data);
 
-      socket.emit(
-        "stopTyping",
-        {
-          sender: user._id,
-          receiver:
-            selectedUser._id,
-        }
-      );
+      socket.emit("sendMessage", data);
+
+      socket.emit("stopTyping", {
+        sender: user._id,
+        receiver: selectedUser._id,
+      });
 
       setText("");
     } catch (error) {
-  console.error(
-    "Failed to send message:",
-    error
-  );
-}
+      console.error("Failed to send message:", error);
+    }
   };
 
   /* ================= TYPING ================= */
 
-  const handleTyping = (
-    value
-  ) => {
+  const handleTyping = () => {
     if (!selectedUser) return;
 
     socket.emit("typing", {
       sender: user._id,
-      receiver:
-        selectedUser._id,
+      receiver: selectedUser._id,
     });
 
-    clearTimeout(
-      typingTimeoutRef.current
-    );
+    clearTimeout(typingTimeoutRef.current);
 
-    typingTimeoutRef.current =
-      setTimeout(() => {
-        socket.emit(
-          "stopTyping",
-          {
-            sender: user._id,
-            receiver:
-              selectedUser._id,
-          }
-        );
-      }, 8000);
+    typingTimeoutRef.current = setTimeout(() => {
+      socket.emit("stopTyping", {
+        sender: user._id,
+        receiver: selectedUser._id,
+      });
+    }, 8000);
   };
 
   return (
@@ -101,26 +75,15 @@ export default function MessageInput({
         placeholder="Type a message..."
         value={text}
         onChange={(e) => {
-          setText(
-            e.target.value
-          );
-
-          handleTyping(
-            e.target.value
-          );
+          setText(e.target.value);
+          handleTyping();
         }}
         onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            handleSend();
-          }
+          if (e.key === "Enter") handleSend();
         }}
       />
 
-      <button
-        onClick={handleSend}
-      >
-        Send
-      </button>
+      <button onClick={handleSend}>Send</button>
     </div>
   );
 }

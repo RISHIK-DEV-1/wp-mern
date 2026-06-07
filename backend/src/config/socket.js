@@ -1,5 +1,6 @@
 import { Server } from "socket.io";
 import Message from "../models/Message.js";
+import User from "../models/User.js";
 
 const onlineUsers = new Map();
 const offlineTimers = new Map();
@@ -210,22 +211,50 @@ export const initSocket = (server) => {
         if (!userId) return;
 
         const timer =
-          setTimeout(() => {
-            onlineUsers.delete(
-              String(userId)
-            );
+          setTimeout(
+            async () => {
+              try {
+                const updatedUser =
+                  await User.findByIdAndUpdate(
+                    userId,
+                    {
+                      lastSeen:
+                        new Date(),
+                    },
+                    {
+                      new: true,
+                    }
+                  );
 
-            offlineTimers.delete(
-              String(userId)
-            );
+                io.emit(
+                  "lastSeenUpdated",
+                  {
+                    userId,
+                    lastSeen:
+                      updatedUser?.lastSeen,
+                  }
+                );
 
-            io.emit(
-              "onlineUsers",
-              Array.from(
-                onlineUsers.keys()
-              )
-            );
-          }, 5000);
+                onlineUsers.delete(
+                  String(userId)
+                );
+
+                offlineTimers.delete(
+                  String(userId)
+                );
+
+                io.emit(
+                  "onlineUsers",
+                  Array.from(
+                    onlineUsers.keys()
+                  )
+                );
+              } catch (error) {
+                console.log(error);
+              }
+            },
+            5000
+          );
 
         offlineTimers.set(
           String(userId),

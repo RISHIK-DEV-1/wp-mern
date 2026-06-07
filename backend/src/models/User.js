@@ -32,7 +32,10 @@ googleId: {
   type: String,
   default: "",
 },
-
+    lastSeen: {
+  type: Date,
+  default: Date.now,
+},
     isVerified: {
       type: Boolean,
       default: false,

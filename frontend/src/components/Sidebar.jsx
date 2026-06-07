@@ -116,11 +116,20 @@ export default function Sidebar({
                       : ""
                   }`}
                 >
-                  {isTyping
-                    ? "typing"
-                    : isOnline
-                    ? "Online"
-                    : "Offline"}
+                  isTyping
+  ? "typing..."
+  : isOnline
+  ? "Online"
+  : u.lastSeen
+  ? `Last seen ${new Date(
+      u.lastSeen
+    ).toLocaleString("en-GB", {
+      day: "numeric",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    })}`
+  : "Offline"
                 </p>
               </div>
             </div>

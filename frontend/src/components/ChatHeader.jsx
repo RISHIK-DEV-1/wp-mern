@@ -1,5 +1,4 @@
 import React from "react";
-
 import "./ChatHeader.css";
 
 export default function ChatHeader({
@@ -7,19 +6,30 @@ export default function ChatHeader({
   setSelectedUser,
   typing,
   onlineUsers,
+  lastSeen,
 }) {
-  const isOnline =
-    onlineUsers.includes(
-      selectedUser?._id
-    );
+  const isOnline = onlineUsers.includes(
+    String(selectedUser?._id)
+  );
+
+  const formatLastSeen = (date) => {
+    if (!date) return "Offline";
+
+    return `Last seen ${new Date(
+      date
+    ).toLocaleString([], {
+      day: "numeric",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    })}`;
+  };
 
   return (
     <div className="chat-header">
       <button
         className="back-btn"
-        onClick={() =>
-          setSelectedUser?.(null)
-        }
+        onClick={() => setSelectedUser?.(null)}
       >
         ←
       </button>
@@ -31,20 +41,14 @@ export default function ChatHeader({
       </div>
 
       <div className="chat-header-info">
-        <h4>
-          {selectedUser?.name}
-        </h4>
+        <h4>{selectedUser?.name}</h4>
 
-        <p
-          className={
-            typing ? "typing" : ""
-          }
-        >
+        <p className={typing ? "typing" : ""}>
           {typing
-            ? "typing"
+            ? "typing..."
             : isOnline
             ? "Online"
-            : "Offline"}
+            : formatLastSeen(lastSeen)}
         </p>
       </div>
     </div>

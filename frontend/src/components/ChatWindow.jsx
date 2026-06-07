@@ -44,6 +44,7 @@ export default function ChatWindow({
         setSelectedUser={setSelectedUser}
         typing={typingUser === selectedUser?._id}
         onlineUsers={onlineUsers}
+        lastSeen={selectedUser?.lastSeen}
       />
 
       <MessageList

@@ -14,17 +14,6 @@ export default function ChatWindow({
 }) {
   const [messages, setMessages] = useState([]);
 
-  /* ================= EMPTY STATE ================= */
-
-  if (!selectedUser) {
-    return (
-      <div className="welcome-screen">
-        <h1>WhatsApp MERN</h1>
-        <p>Select a chat to start messaging</p>
-      </div>
-    );
-  }
-
   /* ================= ADD NEW MESSAGE ================= */
 
   const handleNewMessage = (message) => {
@@ -39,24 +28,38 @@ export default function ChatWindow({
 
   return (
     <div className="chat-window">
-      <ChatHeader
-        selectedUser={selectedUser}
-        setSelectedUser={setSelectedUser}
-        typing={typingUser === selectedUser?._id}
-        onlineUsers={onlineUsers}
-        lastSeen={selectedUser?.lastSeen}
-      />
+      {!selectedUser ? (
+        <div className="welcome-screen">
+          <h1>WhatsApp MERN</h1>
+          <p>Select a chat to start messaging</p>
+        </div>
+      ) : (
+        <>
+          <ChatHeader
+            selectedUser={selectedUser}
+            setSelectedUser={setSelectedUser}
+            typing={
+              typingUser ===
+              selectedUser?._id
+            }
+            onlineUsers={onlineUsers}
+            lastSeen={selectedUser?.lastSeen}
+          />
 
-      <MessageList
-        selectedUser={selectedUser}
-        messages={messages}
-        setMessages={setMessages}
-      />
+          <MessageList
+            selectedUser={selectedUser}
+            messages={messages}
+            setMessages={setMessages}
+          />
 
-      <MessageInput
-        selectedUser={selectedUser}
-        onMessageSent={handleNewMessage}
-      />
+          <MessageInput
+            selectedUser={selectedUser}
+            onMessageSent={
+              handleNewMessage
+            }
+          />
+        </>
+      )}
     </div>
   );
 }

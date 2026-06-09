@@ -1,7 +1,7 @@
 .chat-header {
   width: 100%;
 
-  padding: 12px 20px;
+  padding:12px 20px;
 
   background: #202c33;
 
@@ -11,6 +11,7 @@
   align-items: center;
 
   gap: 12px;
+  
 }
 
 .header-avatar {

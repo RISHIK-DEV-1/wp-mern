@@ -54,14 +54,47 @@ export default function Chat() {
 
   /* ================= SOCKET JOIN ================= */
 
-  useEffect(() => {
-    if (user?._id) {
-      socket.emit(
-        "join",
-        user._id
-      );
-    }
-  }, [user]);
+useEffect(() => {
+  if (!user?._id) return;
+
+  const joinUser = () => {
+    console.log(
+      "FRONTEND JOIN:",
+      user._id
+    );
+
+    socket.emit(
+      "join",
+      user._id
+    );
+
+    socket.emit(
+      "frontendDebug",
+      `JOIN ${user._id}`
+    );
+  };
+
+  console.log(
+    "SOCKET CONNECTED?",
+    socket.connected
+  );
+
+  if (socket.connected) {
+    joinUser();
+  }
+
+  socket.on(
+    "connect",
+    joinUser
+  );
+
+  return () => {
+    socket.off(
+      "connect",
+      joinUser
+    );
+  };
+}, [user]);
 
   /* ================= SOCKET EVENTS ================= */
 

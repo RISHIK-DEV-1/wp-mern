@@ -167,7 +167,7 @@ export default function Sidebar({
                   }`}
                 >
                   {isTyping
-                    ? "typing..."
+                    ? "typing"
                     : isOnline
                     ? "Online"
                     : u.lastSeen

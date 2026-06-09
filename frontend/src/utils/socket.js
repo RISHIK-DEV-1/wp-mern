@@ -4,6 +4,9 @@ const socket = io(
   "http://localhost:5000",
   {
     transports: ["websocket"],
+    reconnection: true,
+    reconnectionAttempts: Infinity,
+    reconnectionDelay: 1000,
   }
 );
 

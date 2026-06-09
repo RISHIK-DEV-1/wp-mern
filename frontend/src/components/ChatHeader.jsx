@@ -45,7 +45,7 @@ export default function ChatHeader({
 
         <p className={typing ? "typing" : ""}>
           {typing
-            ? "typing..."
+            ? "typing"
             : isOnline
             ? "Online"
             : formatLastSeen(lastSeen)}

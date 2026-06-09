@@ -59,8 +59,6 @@ export const initSocket = (server) => {
           let updatedMessage =
             message;
 
-          /* Receiver online -> Delivered */
-
           if (
             receiverSocketId &&
             message.status === "sent"
@@ -79,8 +77,6 @@ export const initSocket = (server) => {
               );
           }
 
-          /* Send to receiver */
-
           if (receiverSocketId) {
             io.to(
               receiverSocketId
@@ -95,8 +91,6 @@ export const initSocket = (server) => {
               "unreadCountUpdated"
             );
           }
-
-          /* Update sender instantly */
 
           if (senderSocketId) {
             io.to(
@@ -233,10 +227,29 @@ export const initSocket = (server) => {
 
         if (!userId) return;
 
+        const disconnectedSocketId =
+          socket.id;
+
         const timer =
           setTimeout(
             async () => {
               try {
+                const currentSocketId =
+                  onlineUsers.get(
+                    String(userId)
+                  );
+
+                /* User already reconnected */
+                if (
+                  currentSocketId !==
+                  disconnectedSocketId
+                ) {
+                  offlineTimers.delete(
+                    String(userId)
+                  );
+                  return;
+                }
+
                 const updatedUser =
                   await User.findByIdAndUpdate(
                     userId,

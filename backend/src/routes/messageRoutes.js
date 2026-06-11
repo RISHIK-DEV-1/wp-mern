@@ -6,6 +6,7 @@ import {
   markDelivered,
   markRead,
   getUnreadCounts,
+  getChatPreviews,
 } from "../controllers/messageController.js";
 
 const router = express.Router();
@@ -14,6 +15,11 @@ router.post("/", sendMessage);
 router.get(
   "/unread/:userId",
   getUnreadCounts
+);
+
+router.get(
+  "/chats/:userId",
+  getChatPreviews
 );
 router.get(
   "/:senderId/:receiverId",

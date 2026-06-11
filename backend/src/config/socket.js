@@ -107,6 +107,9 @@ export const initSocket = (server) => {
               updatedMessage
             );
           }
+          io.emit(
+  "chatListUpdated"
+);
         } catch (error) {
           console.log(error);
         }

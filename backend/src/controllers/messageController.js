@@ -164,3 +164,57 @@ export const getUnreadCounts = async (
     });
   }
 };
+/* ================= GET CHAT PREVIEWS ================= */
+
+export const getChatPreviews = async (
+  req,
+  res
+) => {
+  try {
+    const { userId } = req.params;
+
+    const messages =
+      await Message.find({
+        $or: [
+          { sender: userId },
+          { receiver: userId },
+        ],
+      })
+        .sort({ createdAt: -1 })
+        .populate(
+          "sender receiver",
+          "name avatar lastSeen"
+        );
+
+    const chats = {};
+    
+    messages.forEach((message) => {
+      const otherUser =
+        String(message.sender._id) ===
+        String(userId)
+          ? message.receiver
+          : message.sender;
+
+      if (!chats[otherUser._id]) {
+        chats[otherUser._id] = {
+          user: otherUser,
+          lastMessage: message.text,
+          lastMessageTime:
+            message.createdAt,
+          lastSender:
+    String(message.sender._id),
+
+          status: message.status,
+        };
+      }
+    });
+
+    res.json(
+      Object.values(chats)
+    );
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};

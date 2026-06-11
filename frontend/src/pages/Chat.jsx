@@ -31,6 +31,36 @@ export default function Chat() {
   const [onlineUsers, setOnlineUsers] =
     useState([]);
 
+  /* ================= RESTORE OPEN CHAT ================= */
+
+  useEffect(() => {
+    const savedChat =
+      localStorage.getItem(
+        "selectedChat"
+      );
+
+    if (savedChat) {
+      setSelectedUser(
+        JSON.parse(savedChat)
+      );
+    }
+  }, []);
+
+  /* ================= SAVE OPEN CHAT ================= */
+
+  useEffect(() => {
+    if (selectedUser) {
+      localStorage.setItem(
+        "selectedChat",
+        JSON.stringify(selectedUser)
+      );
+    } else {
+      localStorage.removeItem(
+        "selectedChat"
+      );
+    }
+  }, [selectedUser]);
+
   /* ================= RESPONSIVE ================= */
 
   useEffect(() => {
@@ -54,47 +84,32 @@ export default function Chat() {
 
   /* ================= SOCKET JOIN ================= */
 
-useEffect(() => {
-  if (!user?._id) return;
+  useEffect(() => {
+    if (!user?._id) return;
 
-  const joinUser = () => {
-    console.log(
-      "FRONTEND JOIN:",
-      user._id
-    );
+    const joinUser = () => {
+      socket.emit(
+        "join",
+        user._id
+      );
+    };
 
-    socket.emit(
-      "join",
-      user._id
-    );
+    if (socket.connected) {
+      joinUser();
+    }
 
-    socket.emit(
-      "frontendDebug",
-      `JOIN ${user._id}`
-    );
-  };
-
-  console.log(
-    "SOCKET CONNECTED?",
-    socket.connected
-  );
-
-  if (socket.connected) {
-    joinUser();
-  }
-
-  socket.on(
-    "connect",
-    joinUser
-  );
-
-  return () => {
-    socket.off(
+    socket.on(
       "connect",
       joinUser
     );
-  };
-}, [user]);
+
+    return () => {
+      socket.off(
+        "connect",
+        joinUser
+      );
+    };
+  }, [user]);
 
   /* ================= SOCKET EVENTS ================= */
 

@@ -9,6 +9,8 @@ import socket from "../utils/socket";
 
 import { AuthContext } from "../context/AuthContext";
 
+import NewChatModal from "./NewChatModal";
+import { FiSearch } from "react-icons/fi";
 import "./Sidebar.css";
 
 export default function Sidebar({
@@ -19,37 +21,40 @@ export default function Sidebar({
 }) {
   const { user } = useContext(AuthContext);
 
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [chats, setChats] = useState([]);
+  const [loading, setLoading] =
+    useState(true);
 
   const [unreadCounts, setUnreadCounts] =
     useState({});
 
-  /* ================= FETCH USERS ================= */
+  const [showModal, setShowModal] =
+    useState(false);
+  const [searchTerm, setSearchTerm] =
+  useState("");
+  /* ================= FETCH CHATS ================= */
+
+  const fetchChats = async () => {
+    try {
+      const { data } = await API.get(
+        `/messages/chats/${user._id}`
+      );
+
+      setChats(data);
+    } catch (error) {
+      console.error(
+        "Failed to fetch chats:",
+        error
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const { data } = await API.get(
-          "/auth/users"
-        );
-
-        const filtered = data.filter(
-          (u) => u._id !== user._id
-        );
-
-        setUsers(filtered);
-      } catch (error) {
-        console.error(
-          "Failed to fetch users:",
-          error
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUsers();
+    if (user?._id) {
+      fetchChats();
+    }
   }, [user]);
 
   /* ================= FETCH UNREAD COUNTS ================= */
@@ -62,10 +67,7 @@ export default function Sidebar({
 
       setUnreadCounts(data);
     } catch (error) {
-      console.error(
-        "Failed to fetch unread counts:",
-        error
-      );
+      console.error(error);
     }
   };
 
@@ -75,11 +77,66 @@ export default function Sidebar({
     }
   }, [user]);
 
-  /* ================= REAL-TIME UPDATE ================= */
+  /* ================= MOVE CHAT TO TOP ================= */
+
+  const moveChatToTop = (
+    userId,
+    messageText,
+    messageTime,
+    senderId
+  ) => {
+    setChats((prev) => {
+      const updated = [...prev];
+
+      const index = updated.findIndex(
+        (chat) =>
+          String(chat.user._id) ===
+          String(userId)
+      );
+
+      /* New conversation */
+      if (index === -1) {
+        fetchChats();
+        return prev;
+      }
+
+      const chat = {
+        ...updated[index],
+        lastMessage: messageText,
+        lastMessageTime: messageTime,
+        lastSender: senderId,
+      };
+
+      updated.splice(index, 1);
+
+      return [chat, ...updated];
+    });
+  };
+
+  /* ================= REAL TIME ================= */
 
   useEffect(() => {
     const handleUnreadUpdate = () => {
       fetchUnreadCounts();
+    };
+
+    const handleReceiveMessage = (
+      message
+    ) => {
+      fetchUnreadCounts();
+
+      const otherUserId =
+        String(message.sender) ===
+        String(user._id)
+          ? String(message.receiver)
+          : String(message.sender);
+
+      moveChatToTop(
+        otherUserId,
+        message.text,
+        message.createdAt,
+        message.sender
+      );
     };
 
     socket.on(
@@ -87,30 +144,102 @@ export default function Sidebar({
       handleUnreadUpdate
     );
 
+    socket.on(
+      "receiveMessage",
+      handleReceiveMessage
+    );
+
     return () => {
       socket.off(
         "unreadCountUpdated",
         handleUnreadUpdate
       );
+
+      socket.off(
+        "receiveMessage",
+        handleReceiveMessage
+      );
     };
   }, [user]);
 
+  const formatTime = (date) => {
+    if (!date) return "";
+
+    const msgDate = new Date(date);
+    const now = new Date();
+
+    const isToday =
+      msgDate.toDateString() ===
+      now.toDateString();
+
+    if (isToday) {
+      return msgDate.toLocaleTimeString(
+        "en-US",
+        {
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true,
+        }
+      );
+    }
+
+    return msgDate.toLocaleDateString(
+      "en-GB",
+      {
+        day: "numeric",
+        month: "short",
+      }
+    );
+  };
+  const filteredChats =
+  chats.filter((chat) =>
+    chat.user.name
+      .toLowerCase()
+      .includes(
+        searchTerm.toLowerCase()
+      )
+  ); 
+   
   return (
     <div className="sidebar">
       <h3>Chats</h3>
+    <div className="search-container">
+  <FiSearch className="search-icon" />
+
+  <input
+    type="text"
+    placeholder="Search chats"
+    value={searchTerm}
+    onChange={(e) =>
+      setSearchTerm(
+        e.target.value
+      )
+    }
+    className="search-input"
+  />
+</div>
+      {/* ================= CHAT LIST ================= */}
 
       {loading ? (
-        <div className="sidebar-message">
-          Loading users...
-        </div>
-      ) : users.length === 0 ? (
-        <div className="sidebar-message">
-          No users found
-        </div>
-      ) : (
-        users.map((u) => {
+  <div className="sidebar-message">
+    Loading chats...
+  </div>
+) : chats.length === 0 ? (
+  <div className="sidebar-message">
+    No chats yet
+  </div>
+) : filteredChats.length === 0 ? (
+  <div className="sidebar-message">
+    No matching chats
+  </div>
+) : (
+        filteredChats.map((chat) => {
+          const u = chat.user;
+
           const isOnline =
-            onlineUsers.includes(u._id);
+            onlineUsers.includes(
+              String(u._id)
+            );
 
           const isTyping =
             typingUser === u._id;
@@ -147,16 +276,27 @@ export default function Sidebar({
                 <div className="chat-top">
                   <h4>{u.name}</h4>
 
-                  {unreadCounts[u._id] >
-                    0 && (
-                    <span className="unread-count">
-                      {
-                        unreadCounts[
-                          u._id
-                        ]
-                      }
-                    </span>
-                  )}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems:
+                        "center",
+                      gap: "8px",
+                    }}
+                  >
+                    <small>
+                      {formatTime(
+                        chat.lastMessageTime
+                      )}
+                    </small>
+
+                    {unreadCounts[u._id] >
+                      0 && (
+                      <span className="unread-count">
+                        {unreadCounts[u._id]}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 <p
@@ -167,75 +307,42 @@ export default function Sidebar({
                   }`}
                 >
                   {isTyping
-                    ? "typing"
-                    : isOnline
-                    ? "Online"
-                    : u.lastSeen
-                    ? (() => {
-                        const lastSeen =
-                          new Date(
-                            u.lastSeen
-                          );
-
-                        const now =
-                          new Date();
-
-                        const isToday =
-                          lastSeen.toDateString() ===
-                          now.toDateString();
-
-                        const yesterday =
-                          new Date();
-
-                        yesterday.setDate(
-                          yesterday.getDate() -
-                            1
-                        );
-
-                        const isYesterday =
-                          lastSeen.toDateString() ===
-                          yesterday.toDateString();
-
-                        const time =
-                          lastSeen.toLocaleTimeString(
-                            "en-US",
-                            {
-                              hour:
-                                "numeric",
-                              minute:
-                                "2-digit",
-                              hour12: true,
-                            }
-                          );
-
-                        if (
-                          isToday
-                        ) {
-                          return `Last seen today at ${time}`;
-                        }
-
-                        if (
-                          isYesterday
-                        ) {
-                          return `Last seen yesterday at ${time}`;
-                        }
-
-                        return `Last seen ${lastSeen.toLocaleDateString(
-                          "en-GB",
-                          {
-                            day: "numeric",
-                            month:
-                              "short",
-                          }
-                        )} at ${time}`;
-                      })()
-                    : "Offline"}
+                    ? "typing..."
+                    : String(
+                        chat.lastSender
+                      ) ===
+                      String(user._id)
+                    ? `You: ${chat.lastMessage}`
+                    : chat.lastMessage}
                 </p>
               </div>
             </div>
           );
         })
       )}
+
+      {/* ================= FLOATING BUTTON ================= */}
+
+      <button
+        className="new-chat-btn"
+        onClick={() =>
+          setShowModal(true)
+        }
+      >
+        +
+      </button>
+
+      {/* ================= MODAL ================= */}
+
+      <NewChatModal
+        isOpen={showModal}
+        onClose={() =>
+          setShowModal(false)
+        }
+        setSelectedUser={
+          setSelectedUser
+        }
+      />
     </div>
   );
 }

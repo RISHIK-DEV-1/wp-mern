@@ -12,7 +12,7 @@ import Chat from "./pages/Chat";
 import VerifyEmail from "./pages/VerifyEmail";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
-
+import ProfilePage from "./pages/ProfilePage";
 import ProtectedRoute from "./routes/ProtectedRoute";
 
 import "./index.css";
@@ -59,6 +59,10 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+  path="/profile"
+  element={<ProfilePage />}
+/>
       </Routes>
     </BrowserRouter>
   );

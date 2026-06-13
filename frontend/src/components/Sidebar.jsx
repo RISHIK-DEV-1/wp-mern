@@ -3,7 +3,10 @@ import React, {
   useState,
   useContext,
 } from "react";
-
+import {
+  useNavigate,
+} from "react-router-dom";
+import { FiMoreVertical } from "react-icons/fi";
 import API from "../utils/axios";
 import socket from "../utils/socket";
 
@@ -19,8 +22,13 @@ export default function Sidebar({
   onlineUsers,
   typingUser,
 }) {
-  const { user } = useContext(AuthContext);
-
+  const {
+  user,
+  logoutUser,
+} = useContext(AuthContext);
+  const navigate = useNavigate();
+  const [showMenu, setShowMenu] =
+  useState(false);
   const [chats, setChats] = useState([]);
   const [loading, setLoading] =
     useState(true);
@@ -202,22 +210,62 @@ export default function Sidebar({
    
   return (
     <div className="sidebar">
-      <h3>Chats</h3>
-    <div className="search-container">
-  <FiSearch className="search-icon" />
 
-  <input
-    type="text"
-    placeholder="Search chats"
-    value={searchTerm}
-    onChange={(e) =>
-      setSearchTerm(
-        e.target.value
-      )
-    }
-    className="search-input"
-  />
-</div>
+  <div className="sidebar-header">
+    <h3>Chats</h3>
+
+    <div className="menu-wrapper">
+      <button
+        className="menu-btn"
+        onClick={() =>
+          setShowMenu(
+            (prev) => !prev
+          )
+        }
+      >
+        <FiMoreVertical />
+      </button>
+
+      {showMenu && (
+        <div className="dropdown-menu">
+          <button
+            onClick={() => {
+              setShowMenu(false);
+              navigate("/profile");
+            }}
+          >
+            Profile
+          </button>
+
+          <button
+  onClick={() => {
+    socket.disconnect();
+    logoutUser();
+    navigate("/login");
+  }}
+>
+  Logout
+</button>
+        </div>
+      )}
+    </div>
+  </div>
+
+  <div className="search-container">
+    <FiSearch className="search-icon" />
+
+    <input
+      type="text"
+      placeholder="Search chats"
+      value={searchTerm}
+      onChange={(e) =>
+        setSearchTerm(
+          e.target.value
+        )
+      }
+      className="search-input"
+    />
+  </div>
       {/* ================= CHAT LIST ================= */}
 
       {loading ? (
@@ -258,10 +306,18 @@ export default function Sidebar({
             >
               <div className="avatar-wrapper">
                 <div className="avatar">
-                  {u.name
-                    ?.charAt(0)
-                    .toUpperCase()}
-                </div>
+  {u.avatar ? (
+    <img
+      src={u.avatar}
+      alt=""
+      className="avatar-img"
+    />
+  ) : (
+    u.name
+      ?.charAt(0)
+      .toUpperCase()
+  )}
+</div>
 
                 <span
                   className={`status-dot ${

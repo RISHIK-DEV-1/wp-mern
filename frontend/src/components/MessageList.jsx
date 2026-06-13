@@ -32,7 +32,10 @@ export default function MessageList({
 
       setMessages(data);
     } catch (error) {
-      console.log(error);
+      console.error(
+    "Failed to fetch messages:",
+    error.message
+  );
     }
   };
 

@@ -35,10 +35,20 @@ export default function ChatHeader({
       </button>
 
       <div className="header-avatar">
-        {selectedUser?.name
-          ?.charAt(0)
-          .toUpperCase()}
-      </div>
+  {selectedUser?.avatar ? (
+    <img
+      src={
+        selectedUser.avatar
+      }
+      alt=""
+      className="header-avatar-img"
+    />
+  ) : (
+    selectedUser?.name
+      ?.charAt(0)
+      .toUpperCase()
+  )}
+</div>
 
       <div className="chat-header-info">
         <h4>{selectedUser?.name}</h4>

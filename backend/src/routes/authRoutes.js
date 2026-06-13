@@ -1,4 +1,5 @@
 import express from "express";
+
 import {
   registerUser,
   loginUser,
@@ -14,6 +15,7 @@ import {
 
 import {
   getUsers,
+  updateAvatar,
 } from "../controllers/userController.js";
 
 const router = express.Router();
@@ -22,8 +24,10 @@ const router = express.Router();
 router.post("/register", registerUser);
 router.post("/login", loginUser);
 router.post("/google-login", googleLogin);
+
 /* EMAIL VERIFICATION */
 router.get("/verify-email/:token", verifyEmail);
+
 router.post(
   "/resend-verification",
   resendVerificationEmail
@@ -42,5 +46,11 @@ router.post(
 
 /* USERS */
 router.get("/users", getUsers);
+
+/* AVATAR */
+router.put(
+  "/avatar",
+  updateAvatar
+);
 
 export default router;

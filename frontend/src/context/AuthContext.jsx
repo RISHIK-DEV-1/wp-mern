@@ -17,19 +17,27 @@ export default function AuthProvider({
     useState(true);
 
   useEffect(() => {
-    const storedUser =
-      localStorage.getItem(
-        "user"
-      );
+    try {
+      const storedUser =
+        localStorage.getItem(
+          "user"
+        );
 
-    if (storedUser) {
-      setUser(
-        JSON.parse(storedUser)
+      if (storedUser) {
+        setUser(
+          JSON.parse(storedUser)
+        );
+      }
+    } catch (error) {
+      localStorage.removeItem(
+        "user"
       );
     }
 
     setLoading(false);
   }, []);
+
+  /* ================= LOGIN ================= */
 
   const loginUser = (data) => {
     setUser(data);
@@ -39,6 +47,8 @@ export default function AuthProvider({
       JSON.stringify(data)
     );
   };
+
+  /* ================= LOGOUT ================= */
 
   const logoutUser = () => {
     setUser(null);

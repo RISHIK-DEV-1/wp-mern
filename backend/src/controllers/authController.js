@@ -23,7 +23,9 @@ export const registerUser = async (req, res) => {
     const { name, email, password } = req.body;
 
     if (!name?.trim()) {
-      return res.status(400).json({ message: "Name is required" });
+      return res.status(400).json({
+        message: "Name is required",
+      });
     }
 
     if (!isStrongPassword(password)) {
@@ -33,7 +35,9 @@ export const registerUser = async (req, res) => {
       });
     }
 
-    const userExists = await User.findOne({ email });
+    const userExists = await User.findOne({
+      email,
+    });
 
     if (userExists) {
       return res.status(400).json({
@@ -42,38 +46,63 @@ export const registerUser = async (req, res) => {
     }
 
     const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
 
-    const verificationToken = crypto.randomBytes(32).toString("hex");
+    const hashedPassword = await bcrypt.hash(
+      password,
+      salt
+    );
+
+    const verificationToken =
+      crypto.randomBytes(32).toString("hex");
 
     await User.create({
       name,
       email,
       password: hashedPassword,
+
       isVerified: false,
+
       verificationToken,
-      verificationExpires: Date.now() + 1000 * 60 * 60,
+
+      verificationExpires:
+        Date.now() + 1000 * 60 * 60,
     });
 
-    const verifyUrl = `${process.env.CLIENT_URL}/verify-email/${verificationToken}`;
+    const verifyUrl =
+      `${process.env.CLIENT_URL}/verify-email/${verificationToken}`;
 
     await sendEmail({
       to: email,
       subject: "Verify Your Email",
+
       html: `
         <h2>Welcome to WP MERN Chat</h2>
+
         <p>Please verify your email.</p>
-        <a href="${verifyUrl}" style="padding:10px 15px;background:#00a884;color:#fff;text-decoration:none;border-radius:6px;">
+
+        <a
+          href="${verifyUrl}"
+          style="
+            padding:10px 15px;
+            background:#00a884;
+            color:#fff;
+            text-decoration:none;
+            border-radius:6px;
+          "
+        >
           Verify Email
         </a>
       `,
     });
 
     res.status(201).json({
-      message: "Verification email sent. Please check your inbox.",
+      message:
+        "Verification email sent. Please check your inbox.",
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      message: error.message,
+    });
   }
 };
 
@@ -85,92 +114,148 @@ export const verifyEmail = async (req, res) => {
 
     const user = await User.findOne({
       verificationToken: token,
-      verificationExpires: { $gt: Date.now() },
+
+      verificationExpires: {
+        $gt: Date.now(),
+      },
     });
 
     if (!user) {
       return res.status(400).json({
-        message: "Invalid or expired verification link",
+        message:
+          "Invalid or expired verification link",
       });
     }
 
     user.isVerified = true;
+
     user.verificationToken = null;
     user.verificationExpires = null;
 
     await user.save();
 
-    res.json({ message: "Email verified successfully" });
+    res.json({
+      message:
+        "Email verified successfully",
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      message: error.message,
+    });
   }
 };
 
 /* ================= RESEND VERIFICATION ================= */
 
-export const resendVerificationEmail = async (req, res) => {
-  try {
-    const { email } = req.body;
+export const resendVerificationEmail =
+  async (req, res) => {
+    try {
+      const { email } = req.body;
 
-    const user = await User.findOne({ email });
+      const user = await User.findOne({
+        email,
+      });
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      if (!user) {
+        return res.status(404).json({
+          message: "User not found",
+        });
+      }
+
+      if (user.isVerified) {
+        return res.status(400).json({
+          message:
+            "Email already verified",
+        });
+      }
+
+      const verificationToken =
+        crypto.randomBytes(32).toString("hex");
+
+      user.verificationToken =
+        verificationToken;
+
+      user.verificationExpires =
+        Date.now() +
+        1000 * 60 * 60;
+
+      await user.save();
+
+      const verifyUrl =
+        `${process.env.CLIENT_URL}/verify-email/${verificationToken}`;
+
+      await sendEmail({
+        to: email,
+        subject:
+          "Resend Email Verification",
+
+        html: `
+          <h2>Verify Your Email</h2>
+
+          <a
+            href="${verifyUrl}"
+            style="
+              padding:10px 15px;
+              background:#00a884;
+              color:white;
+              text-decoration:none;
+              border-radius:6px;
+            "
+          >
+            Verify Email
+          </a>
+        `,
+      });
+
+      res.json({
+        message:
+          "Verification email sent successfully",
+      });
+    } catch (error) {
+      res.status(500).json({
+        message: error.message,
+      });
     }
-
-    if (user.isVerified) {
-      return res.status(400).json({ message: "Email already verified" });
-    }
-
-    const verificationToken = crypto.randomBytes(32).toString("hex");
-
-    user.verificationToken = verificationToken;
-    user.verificationExpires = Date.now() + 1000 * 60 * 60;
-
-    await user.save();
-
-    const verifyUrl = `${process.env.CLIENT_URL}/verify-email/${verificationToken}`;
-
-    await sendEmail({
-      to: email,
-      subject: "Resend Email Verification",
-      html: `
-        <h2>Verify Your Email</h2>
-        <a href="${verifyUrl}" style="padding:10px 15px;background:#00a884;color:white;text-decoration:none;border-radius:6px;">
-          Verify Email
-        </a>
-      `,
-    });
-
-    res.json({
-      message: "Verification email sent successfully",
-    });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
+  };
 
 /* ================= LOGIN ================= */
 
-export const loginUser = async (req, res) => {
+export const loginUser = async (
+  req,
+  res
+) => {
   try {
-    const { email, password } = req.body;
+    const { email, password } =
+      req.body;
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({
+      email,
+    });
 
     if (!user) {
-      return res.status(401).json({ message: "Invalid credentials" });
+      return res.status(401).json({
+        message:
+          "Invalid credentials",
+      });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch =
+      await bcrypt.compare(
+        password,
+        user.password
+      );
 
     if (!isMatch) {
-      return res.status(401).json({ message: "Invalid credentials" });
+      return res.status(401).json({
+        message:
+          "Invalid credentials",
+      });
     }
 
     if (!user.isVerified) {
       return res.status(401).json({
-        message: "Please verify your email before logging in",
+        message:
+          "Please verify your email before logging in",
       });
     }
 
@@ -179,28 +264,48 @@ export const loginUser = async (req, res) => {
       name: user.name,
       email: user.email,
       avatar: user.avatar || "",
-      token: generateToken(user._id),
+      token: generateToken(
+        user._id
+      ),
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      message: error.message,
+    });
   }
 };
 
 /* ================= GOOGLE LOGIN ================= */
 
-export const googleLogin = async (req, res) => {
+export const googleLogin = async (
+  req,
+  res
+) => {
   try {
-    const { credential } = req.body;
+    const { credential } =
+      req.body;
 
-    const ticket = await googleClient.verifyIdToken({
-      idToken: credential,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
+    const ticket =
+      await googleClient.verifyIdToken({
+        idToken: credential,
+        audience:
+          process.env.GOOGLE_CLIENT_ID,
+      });
 
-    const payload = ticket.getPayload();
-    const { sub, name, email, picture } = payload;
+    const payload =
+      ticket.getPayload();
 
-    let user = await User.findOne({ email });
+    const {
+      sub,
+      name,
+      email,
+      picture,
+    } = payload;
+
+    let user =
+      await User.findOne({
+        email,
+      });
 
     if (!user) {
       user = await User.create({
@@ -211,10 +316,25 @@ export const googleLogin = async (req, res) => {
         isVerified: true,
       });
     } else {
-      // IMPORTANT FIX:
-      // ensure google users also get avatar updated if missing
-      if (!user.avatar && picture) {
+      let updated = false;
+
+      /* Link Google account */
+      if (!user.googleId) {
+        user.googleId = sub;
+        updated = true;
+      }
+
+      /* Keep existing Cloudinary avatar.
+         Only use Google avatar if avatar is empty. */
+      if (
+        !user.avatar &&
+        picture
+      ) {
         user.avatar = picture;
+        updated = true;
+      }
+
+      if (updated) {
         await user.save();
       }
     }
@@ -224,11 +344,14 @@ export const googleLogin = async (req, res) => {
       name: user.name,
       email: user.email,
       avatar: user.avatar || "",
-      token: generateToken(user._id),
+      token: generateToken(
+        user._id
+      ),
     });
   } catch (error) {
     res.status(500).json({
-      message: "Google login failed",
+      message:
+        "Google login failed",
     });
   }
 };

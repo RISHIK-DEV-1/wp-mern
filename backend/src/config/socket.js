@@ -74,6 +74,17 @@ export const initSocket = (server) => {
                   returnDocument:
                     "after",
                 }
+              ).populate(
+                "replyTo",
+                "text sender"
+              );
+          } else {
+            updatedMessage =
+              await Message.findById(
+                message._id
+              ).populate(
+                "replyTo",
+                "text sender"
               );
           }
 
@@ -107,9 +118,10 @@ export const initSocket = (server) => {
               updatedMessage
             );
           }
+
           io.emit(
-  "chatListUpdated"
-);
+            "chatListUpdated"
+          );
         } catch (error) {
           console.log(error);
         }
@@ -132,6 +144,9 @@ export const initSocket = (server) => {
                 returnDocument:
                   "after",
               }
+            ).populate(
+              "replyTo",
+              "text sender"
             );
 
           if (!message) return;
@@ -242,7 +257,6 @@ export const initSocket = (server) => {
                     String(userId)
                   );
 
-                /* User already reconnected */
                 if (
                   currentSocketId !==
                   disconnectedSocketId

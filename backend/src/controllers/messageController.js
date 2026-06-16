@@ -5,7 +5,7 @@ import Message from "../models/Message.js";
 
 export const sendMessage = async (req, res) => {
   try {
-    const { sender, receiver, text } = req.body;
+    const { sender, receiver, text, replyTo } = req.body;
 
     if (!sender || !receiver || !text?.trim()) {
       return res.status(400).json({
@@ -17,6 +17,7 @@ export const sendMessage = async (req, res) => {
       sender,
       receiver,
       text,
+      replyTo: replyTo || null,
       status: "sent",
     });
 
@@ -35,19 +36,24 @@ export const getMessages = async (req, res) => {
     const { senderId, receiverId } = req.params;
 
     const messages = await Message.find({
-      $or: [
-        {
-          sender: senderId,
-          receiver: receiverId,
-        },
-        {
-          sender: receiverId,
-          receiver: senderId,
-        },
-      ],
-    }).sort({
-      createdAt: 1,
-    });
+  $or: [
+    {
+      sender: senderId,
+      receiver: receiverId,
+    },
+    {
+      sender: receiverId,
+      receiver: senderId,
+    },
+  ],
+})
+.populate(
+  "replyTo",
+  "text sender"
+)
+.sort({
+  createdAt: 1,
+});
 
     res.json(messages);
   } catch (error) {

@@ -1,51 +1,159 @@
 /* =========================
-   MESSAGE INPUT
+   REPLY BAR
+========================= */
+
+.reply-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  background: #202c33;
+
+  padding: 10px 14px;
+
+  border-top: 1px solid #2a3942;
+  border-bottom: 1px solid #2a3942;
+
+  animation: replySlideUp 0.22s ease;
+}
+
+@keyframes replySlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.reply-bar-left {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 10px;
+
+  flex: 1;
+
+  overflow: hidden;
+}
+
+.reply-icon {
+  color: #00a884;
+
+  font-size: 22px;
+
+  margin-top: 2px;
+
+  flex-shrink: 0;
+}
+
+.reply-title {
+  color: #00a884;
+
+  font-size: 13px;
+
+  font-weight: 600;
+
+  margin-bottom: 2px;
+}
+
+.reply-text {
+  color: #d1d7db;
+
+  font-size: 13px;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* =========================
+   CLOSE BUTTON
+========================= */
+
+.reply-close {
+  background: transparent;
+
+  border: none;
+
+  color: #8696a0;
+
+  width: 32px;
+  height: 32px;
+
+  border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+
+  transition: 0.2s;
+}
+
+.reply-close:hover {
+  background: rgba(255,255,255,0.08);
+
+  color: white;
+}
+
+.reply-close svg {
+  font-size: 22px;
+}
+
+/* =========================
+   INPUT AREA
 ========================= */
 
 .message-input {
   width: 100%;
-  flex-shrink: 0;
+
   display: flex;
   align-items: center;
 
-  gap: 10px;
+  gap: 8px;
 
-  padding: 12px;
+  padding: 10px 12px;
 
   background: #202c33;
-
-  border-top: 1px solid #2a3942;
 }
 
 .message-input input {
   flex: 1;
 
-  padding: 12px;
-
   border: none;
   outline: none;
-
-  border-radius: 8px;
 
   background: #2a3942;
 
   color: white;
 
+  border-radius: 10px;
+
+  padding: 12px 16px;
+
   font-size: 15px;
 }
 
 .message-input input::placeholder {
-  color: #b0b3b8;
+  color: #8696a0;
 }
 
-.message-input button {
-  width: auto;
+/* =========================
+   SEND BUTTON
+========================= */
 
-  padding: 12px 20px;
+.message-input button {
+  width: 48px;
+  height: 48px;
 
   border: none;
 
-  border-radius: 8px;
+  border-radius: 50%;
 
   background: #00a884;
 
@@ -53,7 +161,9 @@
 
   cursor: pointer;
 
-  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   transition: 0.2s ease;
 }
@@ -62,17 +172,26 @@
   background: #019270;
 }
 
+.message-input button:active {
+  transform: scale(0.94);
+}
+
 /* =========================
    MOBILE
 ========================= */
 
 @media (max-width: 700px) {
-  .message-input {
+  .reply-bar {
     padding: 10px;
   }
 
+  .message-input {
+    padding: 8px 10px;
+  }
+
   .message-input button {
-    padding: 10px 16px;
+    width: 44px;
+    height: 44px;
   }
 }
 
@@ -81,8 +200,15 @@
 ========================= */
 
 @media (max-width: 450px) {
-  .message-input input,
-  .message-input button {
+  .reply-title {
+    font-size: 12px;
+  }
+
+  .reply-text {
+    font-size: 12px;
+  }
+
+  .message-input input {
     font-size: 14px;
   }
 }

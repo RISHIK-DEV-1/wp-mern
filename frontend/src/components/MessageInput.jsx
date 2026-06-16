@@ -4,6 +4,12 @@ import React, {
   useRef,
 } from "react";
 
+import {
+  MdClose,
+  MdReply,
+  MdSend,
+} from "react-icons/md";
+
 import API from "../utils/axios";
 import socket from "../utils/socket";
 
@@ -14,37 +20,67 @@ import "./MessageInput.css";
 export default function MessageInput({
   selectedUser,
   onMessageSent,
+  replyMessage,
+  setReplyMessage,
 }) {
-  const { user } = useContext(AuthContext);
+  const { user } =
+    useContext(AuthContext);
 
-  const [text, setText] = useState("");
-  const typingTimeoutRef = useRef(null);
+  const [text, setText] =
+    useState("");
 
-  /* ================= SEND MESSAGE ================= */
+  const typingTimeoutRef =
+    useRef(null);
+
+  /* ================= SEND ================= */
 
   const handleSend = async () => {
-    if (!text.trim() || !selectedUser) return;
+    if (
+      !text.trim() ||
+      !selectedUser
+    ) {
+      return;
+    }
 
     try {
-      const { data } = await API.post("/messages", {
-        sender: user._id,
-        receiver: selectedUser._id,
-        text,
-      });
+      const { data } =
+        await API.post(
+          "/messages",
+          {
+            sender: user._id,
+            receiver:
+              selectedUser._id,
+            text,
+            replyTo:
+              replyMessage?._id ||
+              null,
+          }
+        );
 
-      /* ✅ FIX: instantly update UI */
       onMessageSent?.(data);
 
-      socket.emit("sendMessage", data);
+      socket.emit(
+        "sendMessage",
+        data
+      );
 
-      socket.emit("stopTyping", {
-        sender: user._id,
-        receiver: selectedUser._id,
-      });
+      socket.emit(
+        "stopTyping",
+        {
+          sender: user._id,
+          receiver:
+            selectedUser._id,
+        }
+      );
 
       setText("");
+
+      setReplyMessage(null);
     } catch (error) {
-      console.error("Failed to send message:", error);
+      console.error(
+        "Failed to send message:",
+        error
+      );
     }
   };
 
@@ -55,35 +91,97 @@ export default function MessageInput({
 
     socket.emit("typing", {
       sender: user._id,
-      receiver: selectedUser._id,
+      receiver:
+        selectedUser._id,
     });
 
-    clearTimeout(typingTimeoutRef.current);
+    clearTimeout(
+      typingTimeoutRef.current
+    );
 
-    typingTimeoutRef.current = setTimeout(() => {
-      socket.emit("stopTyping", {
-        sender: user._id,
-        receiver: selectedUser._id,
-      });
-    }, 8000);
+    typingTimeoutRef.current =
+      setTimeout(() => {
+        socket.emit(
+          "stopTyping",
+          {
+            sender: user._id,
+            receiver:
+              selectedUser._id,
+          }
+        );
+      }, 8000);
   };
 
-  return (
-    <div className="message-input">
-      <input
-        type="text"
-        placeholder="Type a message..."
-        value={text}
-        onChange={(e) => {
-          setText(e.target.value);
-          handleTyping();
-        }}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") handleSend();
-        }}
-      />
+  const replyUserName =
+    String(replyMessage?.sender) ===
+    String(user._id)
+      ? "You"
+      : selectedUser?.name;
 
-      <button onClick={handleSend}>Send</button>
-    </div>
+  return (
+    <>
+      {/* ================= REPLY BAR ================= */}
+
+      {replyMessage && (
+        <div className="reply-bar">
+          <div className="reply-bar-left">
+            <MdReply
+              className="reply-icon"
+            />
+
+            <div>
+              <div className="reply-title">
+                {replyUserName}
+              </div>
+
+              <div className="reply-text">
+                {replyMessage.text}
+              </div>
+            </div>
+          </div>
+
+          <button
+            className="reply-close"
+            onClick={() =>
+              setReplyMessage(
+                null
+              )
+            }
+          >
+            <MdClose />
+          </button>
+        </div>
+      )}
+
+      {/* ================= INPUT ================= */}
+
+      <div className="message-input">
+        <input
+          type="text"
+          placeholder="Type a message"
+          value={text}
+          onChange={(e) => {
+            setText(
+              e.target.value
+            );
+
+            handleTyping();
+          }}
+          onKeyDown={(e) => {
+            if (
+              e.key === "Enter"
+            ) {
+              handleSend();
+            }
+          }}
+        />
+
+        <button
+          onClick={handleSend}
+        >
+          <MdSend />
+        </button>
+      </div>
+    </>
   );
 }

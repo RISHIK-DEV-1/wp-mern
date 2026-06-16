@@ -12,17 +12,25 @@ export default function ChatWindow({
   typingUser,
   onlineUsers,
 }) {
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] =
+    useState([]);
+
+  const [replyMessage, setReplyMessage] =
+    useState(null);
 
   /* ================= ADD NEW MESSAGE ================= */
 
-  const handleNewMessage = (message) => {
+  const handleNewMessage = (
+    message
+  ) => {
     setMessages((prev) => {
       const exists = prev.some(
         (m) => m._id === message._id
       );
 
-      return exists ? prev : [...prev, message];
+      return exists
+        ? prev
+        : [...prev, message];
     });
   };
 
@@ -31,31 +39,56 @@ export default function ChatWindow({
       {!selectedUser ? (
         <div className="welcome-screen">
           <h1>WhatsApp MERN</h1>
-          <p>Select a chat to start messaging</p>
+
+          <p>
+            Select a chat to start
+            messaging
+          </p>
         </div>
       ) : (
         <>
           <ChatHeader
             selectedUser={selectedUser}
-            setSelectedUser={setSelectedUser}
+            setSelectedUser={
+              setSelectedUser
+            }
             typing={
               typingUser ===
               selectedUser?._id
             }
-            onlineUsers={onlineUsers}
-            lastSeen={selectedUser?.lastSeen}
+            onlineUsers={
+              onlineUsers
+            }
+            lastSeen={
+              selectedUser?.lastSeen
+            }
           />
 
           <MessageList
-            selectedUser={selectedUser}
+            selectedUser={
+              selectedUser
+            }
             messages={messages}
-            setMessages={setMessages}
+            setMessages={
+              setMessages
+            }
+            setReplyMessage={
+              setReplyMessage
+            }
           />
 
           <MessageInput
-            selectedUser={selectedUser}
+            selectedUser={
+              selectedUser
+            }
             onMessageSent={
               handleNewMessage
+            }
+            replyMessage={
+              replyMessage
+            }
+            setReplyMessage={
+              setReplyMessage
             }
           />
         </>

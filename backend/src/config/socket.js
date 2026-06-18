@@ -20,301 +20,187 @@ export const initSocket = (server) => {
       socket.userId = userId;
 
       if (offlineTimers.has(userId)) {
-        clearTimeout(
-          offlineTimers.get(userId)
-        );
-
+        clearTimeout(offlineTimers.get(userId));
         offlineTimers.delete(userId);
       }
 
-      onlineUsers.set(
-        String(userId),
-        socket.id
-      );
+      onlineUsers.set(String(userId), socket.id);
 
-      io.emit(
-        "onlineUsers",
-        Array.from(
-          onlineUsers.keys()
-        )
-      );
+      io.emit("onlineUsers", Array.from(onlineUsers.keys()));
     });
 
     /* ================= SEND MESSAGE ================= */
 
-    socket.on(
-      "sendMessage",
-      async (message) => {
-        try {
-          const receiverSocketId =
-            onlineUsers.get(
-              String(message.receiver)
-            );
+    socket.on("sendMessage", async (message) => {
+      try {
+        const receiverSocketId = onlineUsers.get(String(message.receiver));
+        const senderSocketId = onlineUsers.get(String(message.sender));
 
-          const senderSocketId =
-            onlineUsers.get(
-              String(message.sender)
-            );
+        let updatedMessage = message;
 
-          let updatedMessage =
-            message;
-
-          if (
-            receiverSocketId &&
-            message.status === "sent"
-          ) {
-            updatedMessage =
-              await Message.findByIdAndUpdate(
-                message._id,
-                {
-                  status:
-                    "delivered",
-                },
-                {
-                  returnDocument:
-                    "after",
-                }
-              ).populate(
-                "replyTo",
-                "text sender"
-              );
-          } else {
-            updatedMessage =
-              await Message.findById(
-                message._id
-              ).populate(
-                "replyTo",
-                "text sender"
-              );
-          }
-
-          if (receiverSocketId) {
-            io.to(
-              receiverSocketId
-            ).emit(
-              "receiveMessage",
-              updatedMessage
-            );
-
-            io.to(
-              receiverSocketId
-            ).emit(
-              "unreadCountUpdated"
-            );
-          }
-
-          if (senderSocketId) {
-            io.to(
-              senderSocketId
-            ).emit(
-              "receiveMessage",
-              updatedMessage
-            );
-
-            io.to(
-              senderSocketId
-            ).emit(
-              "messageStatusUpdated",
-              updatedMessage
-            );
-          }
-
-          io.emit(
-            "chatListUpdated"
+        if (receiverSocketId && message.status === "sent") {
+          updatedMessage = await Message.findByIdAndUpdate(
+            message._id,
+            { status: "delivered" },
+            { new: true }
+          ).populate("replyTo", "text sender");
+        } else {
+          updatedMessage = await Message.findById(message._id).populate(
+            "replyTo",
+            "text sender"
           );
-        } catch (error) {
-          console.log(error);
         }
+
+        if (receiverSocketId) {
+          io.to(receiverSocketId).emit("receiveMessage", updatedMessage);
+          io.to(receiverSocketId).emit("unreadCountUpdated");
+        }
+
+        if (senderSocketId) {
+          io.to(senderSocketId).emit("receiveMessage", updatedMessage);
+          io.to(senderSocketId).emit("messageStatusUpdated", updatedMessage);
+        }
+
+        io.emit("chatListUpdated");
+      } catch (error) {
+        console.log(error);
       }
-    );
+    });
 
     /* ================= MARK READ ================= */
 
-    socket.on(
-      "markRead",
-      async (messageId) => {
-        try {
-          const message =
-            await Message.findByIdAndUpdate(
-              messageId,
-              {
-                status: "read",
-              },
-              {
-                returnDocument:
-                  "after",
-              }
-            ).populate(
-              "replyTo",
-              "text sender"
-            );
+    socket.on("markRead", async (messageId) => {
+      try {
+        const message = await Message.findByIdAndUpdate(
+          messageId,
+          { status: "read" },
+          { new: true }
+        ).populate("replyTo", "text sender");
 
-          if (!message) return;
+        if (!message) return;
 
-          const senderSocketId =
-            onlineUsers.get(
-              String(
-                message.sender
-              )
-            );
+        const senderSocketId = onlineUsers.get(String(message.sender));
 
-          if (senderSocketId) {
-            io.to(
-              senderSocketId
-            ).emit(
-              "messageStatusUpdated",
-              message
-            );
-          }
-
-          const receiverSocketId =
-            onlineUsers.get(
-              String(
-                message.receiver
-              )
-            );
-
-          if (receiverSocketId) {
-            io.to(
-              receiverSocketId
-            ).emit(
-              "unreadCountUpdated"
-            );
-          }
-        } catch (error) {
-          console.log(error);
+        if (senderSocketId) {
+          io.to(senderSocketId).emit("messageStatusUpdated", message);
         }
+
+        const receiverSocketId = onlineUsers.get(String(message.receiver));
+
+        if (receiverSocketId) {
+          io.to(receiverSocketId).emit("unreadCountUpdated");
+        }
+      } catch (error) {
+        console.log(error);
       }
-    );
+    });
 
     /* ================= TYPING ================= */
 
-    socket.on(
-      "typing",
-      ({
-        sender,
-        receiver,
-      }) => {
-        const receiverSocketId =
-          onlineUsers.get(
-            String(receiver)
-          );
+    socket.on("typing", ({ sender, receiver }) => {
+      const receiverSocketId = onlineUsers.get(String(receiver));
 
-        if (receiverSocketId) {
-          io.to(
-            receiverSocketId
-          ).emit(
-            "typing",
-            { sender }
-          );
-        }
+      if (receiverSocketId) {
+        io.to(receiverSocketId).emit("typing", { sender });
       }
-    );
+    });
 
     /* ================= STOP TYPING ================= */
 
-    socket.on(
-      "stopTyping",
-      ({
-        sender,
-        receiver,
-      }) => {
-        const receiverSocketId =
-          onlineUsers.get(
-            String(receiver)
-          );
+    socket.on("stopTyping", ({ sender, receiver }) => {
+      const receiverSocketId = onlineUsers.get(String(receiver));
+
+      if (receiverSocketId) {
+        io.to(receiverSocketId).emit("stopTyping", { sender });
+      }
+    });
+
+    /* ================= REACTIONS (NEW) ================= */
+
+    socket.on("reactMessage", async ({ messageId, userId, emoji }) => {
+      try {
+        const msg = await Message.findById(messageId);
+        if (!msg) return;
+
+        const existingIndex = msg.reactions.findIndex(
+          (r) => String(r.user) === String(userId)
+        );
+
+        if (existingIndex !== -1) {
+          if (msg.reactions[existingIndex].emoji === emoji) {
+            msg.reactions.splice(existingIndex, 1);
+          } else {
+            msg.reactions[existingIndex].emoji = emoji;
+          }
+        } else {
+          msg.reactions.push({ user: userId, emoji });
+        }
+
+        await msg.save();
+
+        const updatedMessage = await Message.findById(messageId)
+          .populate("replyTo", "text sender");
+
+        const receiverSocketId = onlineUsers.get(String(updatedMessage.receiver));
+        const senderSocketId = onlineUsers.get(String(updatedMessage.sender));
 
         if (receiverSocketId) {
-          io.to(
-            receiverSocketId
-          ).emit(
-            "stopTyping",
-            { sender }
+          io.to(receiverSocketId).emit(
+            "messageReactionUpdated",
+            updatedMessage
           );
         }
+
+        if (senderSocketId) {
+          io.to(senderSocketId).emit(
+            "messageReactionUpdated",
+            updatedMessage
+          );
+        }
+      } catch (err) {
+        console.log("Reaction error:", err.message);
       }
-    );
+    });
 
     /* ================= DISCONNECT ================= */
 
-    socket.on(
-      "disconnect",
-      () => {
-        const userId =
-          socket.userId;
+    socket.on("disconnect", () => {
+      const userId = socket.userId;
 
-        if (!userId) return;
+      if (!userId) return;
 
-        const disconnectedSocketId =
-          socket.id;
+      const disconnectedSocketId = socket.id;
 
-        const timer =
-          setTimeout(
-            async () => {
-              try {
-                const currentSocketId =
-                  onlineUsers.get(
-                    String(userId)
-                  );
+      const timer = setTimeout(async () => {
+        try {
+          const currentSocketId = onlineUsers.get(String(userId));
 
-                if (
-                  currentSocketId !==
-                  disconnectedSocketId
-                ) {
-                  offlineTimers.delete(
-                    String(userId)
-                  );
-                  return;
-                }
+          if (currentSocketId !== disconnectedSocketId) {
+            offlineTimers.delete(String(userId));
+            return;
+          }
 
-                const updatedUser =
-                  await User.findByIdAndUpdate(
-                    userId,
-                    {
-                      lastSeen:
-                        new Date(),
-                    },
-                    {
-                      returnDocument:
-                        "after",
-                    }
-                  );
-
-                io.emit(
-                  "lastSeenUpdated",
-                  {
-                    userId,
-                    lastSeen:
-                      updatedUser?.lastSeen,
-                  }
-                );
-
-                onlineUsers.delete(
-                  String(userId)
-                );
-
-                offlineTimers.delete(
-                  String(userId)
-                );
-
-                io.emit(
-                  "onlineUsers",
-                  Array.from(
-                    onlineUsers.keys()
-                  )
-                );
-              } catch (error) {
-                console.log(error);
-              }
-            },
-            5000
+          const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            { lastSeen: new Date() },
+            { new: true }
           );
 
-        offlineTimers.set(
-          String(userId),
-          timer
-        );
-      }
-    );
+          io.emit("lastSeenUpdated", {
+            userId,
+            lastSeen: updatedUser?.lastSeen,
+          });
+
+          onlineUsers.delete(String(userId));
+          offlineTimers.delete(String(userId));
+
+          io.emit("onlineUsers", Array.from(onlineUsers.keys()));
+        } catch (error) {
+          console.log(error);
+        }
+      }, 5000);
+
+      offlineTimers.set(String(userId), timer);
+    });
   });
 };

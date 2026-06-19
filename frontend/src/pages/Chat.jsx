@@ -60,7 +60,44 @@ export default function Chat() {
       );
     }
   }, [selectedUser]);
+  
+  /* ================= MOBILE HISTORY ================= */
 
+useEffect(() => {
+  if (!isMobile) return;
+
+  if (selectedUser) {
+    window.history.pushState(
+      { chatOpen: true },
+      ""
+    );
+  }
+}, [selectedUser, isMobile]);
+  /* ================= MOBILE BACK BUTTON ================= */
+
+useEffect(() => {
+  const handlePopState = () => {
+    if (isMobile && selectedUser) {
+      setSelectedUser(null);
+
+      localStorage.removeItem(
+        "selectedChat"
+      );
+    }
+  };
+
+  window.addEventListener(
+    "popstate",
+    handlePopState
+  );
+
+  return () => {
+    window.removeEventListener(
+      "popstate",
+      handlePopState
+    );
+  };
+}, [isMobile, selectedUser]);
   /* ================= RESPONSIVE ================= */
 
   useEffect(() => {

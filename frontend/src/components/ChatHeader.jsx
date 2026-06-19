@@ -28,11 +28,19 @@ export default function ChatHeader({
   return (
     <div className="chat-header">
       <button
-        className="back-btn"
-        onClick={() => setSelectedUser?.(null)}
-      >
-        ←
-      </button>
+  className="back-btn"
+  onClick={() => {
+    setSelectedUser?.(null);
+
+    localStorage.removeItem(
+      "selectedChat"
+    );
+
+    window.history.back();
+  }}
+>
+  ←
+</button>
 
       <div className="header-avatar">
   {selectedUser?.avatar ? (

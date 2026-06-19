@@ -8,6 +8,8 @@ import React, {
 import {
   MdReply,
   MdAddReaction,
+  MdDone,
+  MdDoneAll,
 } from "react-icons/md";
 
 import EmojiPicker from "emoji-picker-react";
@@ -137,21 +139,39 @@ export default function MessageList({
   /* ================= STATUS ICON ================= */
 
   const getStatusIcon = (message) => {
-    if (String(message.sender) !== String(user._id)) return null;
+  if (String(message.sender) !== String(user._id)) return null;
 
-    switch (message.status) {
-      case "sending":
-        return "⏰";
-      case "sent":
-        return "✓";
-      case "delivered":
-        return "✓✓";
-      case "read":
-        return <span style={{ color: "#53bdeb" }}>✓✓</span>;
-      default:
-        return "✓";
-    }
-  };
+  switch (message.status) {
+    case "sending":
+      return (
+        <span className="msg-status-icon">
+          ⏰
+        </span>
+      );
+
+    case "sent":
+      return (
+        <MdDone className="msg-status-icon" />
+      );
+
+    case "delivered":
+      return (
+        <MdDoneAll className="msg-status-icon" />
+      );
+
+    case "read":
+      return (
+        <MdDoneAll
+          className="msg-status-icon read"
+        />
+      );
+
+    default:
+      return (
+        <MdDone className="msg-status-icon" />
+      );
+  }
+};
 
   /* ================= REPLY JUMP ================= */
 
@@ -257,9 +277,9 @@ export default function MessageList({
       String(user._id)
         ? "sent-row"
         : "received-row"
-    
+
   } ${
-    reactionTarget === message._id
+      selectedMessageId === message._id
       ? "message-row-active"
       : ""
   }`}
@@ -323,7 +343,7 @@ export default function MessageList({
         setReactionTarget(null)
       }
     >
-            
+
           {/* SWIPE ARROW */}
           {swipingId === message._id && (
             <div
@@ -353,13 +373,13 @@ export default function MessageList({
           {renderReactions(message)}
 
           {/* TIME */}
-          <small className="message-time">
+          <span className="message-time">
             {new Date(message.createdAt).toLocaleTimeString([], {
               hour: "2-digit",
               minute: "2-digit",
             })}{" "}
             {getStatusIcon(message)}
-          </small>
+          </span>
 
           {/* QUICK REACTION BAR */}
           {reactionTarget ===
@@ -386,7 +406,7 @@ export default function MessageList({
               </span>
             </div>
           )}
-  
+
 </div>
 </div>
 ))}

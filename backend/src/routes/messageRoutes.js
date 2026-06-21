@@ -1,5 +1,4 @@
 import express from "express";
-
 import {
   sendMessage,
   getMessages,
@@ -8,6 +7,8 @@ import {
   getUnreadCounts,
   getChatPreviews,
   toggleReaction,
+  deleteForMe,
+  deleteForEveryone,
 } from "../controllers/messageController.js";
 
 const router = express.Router();
@@ -26,5 +27,13 @@ router.put("/read/:messageId", markRead);
 
 /* ================= REACTIONS ================= */
 router.post("/react/:messageId", toggleReaction);
+router.post(
+  "/delete-for-me/:messageId",
+  deleteForMe
+);
 
+router.post(
+  "/delete-for-everyone/:messageId",
+  deleteForEveryone
+);
 export default router;

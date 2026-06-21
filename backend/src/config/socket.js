@@ -161,6 +161,26 @@ export const initSocket = (server) => {
         console.log("Reaction error:", err.message);
       }
     });
+   /* ================= MESSAGE DELETED ================= */
+
+socket.on("messageDeleted", async (messageId) => {
+  try {
+    const updatedMessage =
+      await Message.findById(messageId)
+        .populate("replyTo", "text sender");
+
+    if (!updatedMessage) return;
+
+    io.emit(
+      "messageStatusUpdated",
+      updatedMessage
+    );
+
+    io.emit("chatListUpdated");
+  } catch (error) {
+    console.log(error);
+  }
+});
 
     /* ================= DISCONNECT ================= */
 

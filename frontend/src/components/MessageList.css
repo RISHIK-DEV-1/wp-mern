@@ -545,7 +545,95 @@
       scale(1);
   }
 }
+/* =========================
+   DATE SEPARATOR
+========================= */
 
+.date-separator {
+  display: flex;
+  justify-content: center;
+
+  margin: 10px 0;
+}
+
+.date-separator span {
+  background: #182229;
+
+  color: #d1d7db;
+
+  font-size: 12px;
+
+  padding: 6px 12px;
+
+  border-radius: 8px;
+
+  box-shadow:
+    0 1px 2px rgba(0,0,0,0.25);
+
+  white-space: nowrap;
+    -webkit-user-select: none;
+  user-select: none;
+
+  -webkit-touch-callout: none;
+}
+.date-separator {
+}
+.delete-btn {  
+  display: flex;  
+  align-items: center;  
+  justify-content: center;  
+  
+  color: #ff6b6b;  
+}  
+  
+.delete-popup {  
+  position: fixed;  
+  
+  left: 50%;  
+  top: 50%;  
+  
+  transform: translate(-50%, -50%);  
+  
+  background: #202c33;  
+  
+  padding: 18px;  
+  
+  border-radius: 12px;  
+  
+  z-index: 10000;  
+  
+  min-width: 260px;  
+  
+  display: flex;  
+  flex-direction: column;  
+  gap: 10px;  
+}  
+  
+.delete-popup h4 {  
+  margin: 0 0 10px;  
+}  
+  
+.delete-popup button {  
+  border: none;  
+  
+  padding: 10px;  
+  
+  border-radius: 8px;  
+  
+  background: #2a3942;  
+  
+  color: white;  
+}
+.deleted-message {
+  font-style: italic;
+  opacity: 0.8;
+}
+
+.deleted-icon {
+  font-size: 16px;
+  vertical-align: middle;
+  margin-right: 4px;
+}
 /* =========================
    MOBILE
 ========================= */

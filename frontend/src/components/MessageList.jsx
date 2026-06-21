@@ -10,6 +10,8 @@ import {
   MdAddReaction,
   MdDone,
   MdDoneAll,
+  MdDelete,
+  MdBlock,
 } from "react-icons/md";
 
 import EmojiPicker from "emoji-picker-react";
@@ -35,13 +37,14 @@ export default function MessageList({
   const messageRefs = useRef({});
 
   const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
   const touchEndX = useRef(0);
   const longPressTimer = useRef(null);
 
   const [swipingId, setSwipingId] = useState(null);
   const [swipeDistance, setSwipeDistance] = useState(0);
-
-  const [reactionTarget, setReactionTarget] = useState(null);
+  const [deleteTarget, setDeleteTarget] =
+  useState(null);
   const [pickerTarget, setPickerTarget] = useState(null);
   const [selectedMessageId, setSelectedMessageId] =
   useState(null);
@@ -200,7 +203,7 @@ export default function MessageList({
       emoji,
     });
 
-    setReactionTarget(null);
+    setSelectedMessageId(null);
     setPickerTarget(null);
   };
 
@@ -231,10 +234,10 @@ export default function MessageList({
   message
 ) => {
     touchStartX.current = e.changedTouches[0].clientX;
+    touchStartY.current =
+  e.changedTouches[0].clientY;
 
     longPressTimer.current = setTimeout(() => {
-  setReactionTarget(message._id);
-
   setSelectedMessageId(
     message._id
   );
@@ -248,7 +251,7 @@ export default function MessageList({
 
     if (distance > 0) {
       setSwipingId(message._id);
-      setSwipeDistance(Math.min(distance, 80));
+      setSwipeDistance(Math.min(distance, 100));
     }
   };
 
@@ -257,21 +260,133 @@ export default function MessageList({
 
     touchEndX.current = e.changedTouches[0].clientX;
 
-    const distance = touchEndX.current - touchStartX.current;
+    const deltaX =
+  touchEndX.current -
+  touchStartX.current;
 
-    if (distance > 60) {
-      setReplyMessage(message);
-    }
+const deltaY = Math.abs(
+  e.changedTouches[0].clientY -
+  touchStartY.current
+);
+
+if (
+  deltaX > 95 &&
+  deltaY < 30 &&
+   !message.deletedForEveryone
+) {
+  setReplyMessage(message);
+}
 
     setSwipingId(null);
     setSwipeDistance(0);
   };
+  const getDateLabel = (date) => {
+  const msgDate = new Date(date);
 
+  const today = new Date();
+  const yesterday = new Date();
+
+  yesterday.setDate(today.getDate() - 1);
+
+  const isToday =
+    msgDate.toDateString() ===
+    today.toDateString();
+
+  const isYesterday =
+    msgDate.toDateString() ===
+    yesterday.toDateString();
+
+  if (isToday) return "Today";
+
+  if (isYesterday) return "Yesterday";
+
+  return msgDate.toLocaleDateString([], {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+};
+   const handleDeleteForMe = async () => {
+  try {
+    await API.post(
+      `/messages/delete-for-me/${deleteTarget._id}`,
+      {
+        userId: user._id,
+      }
+    );
+    socket.emit(
+  "messageDeleted",
+  deleteTarget._id
+);
+    setMessages((prev) =>
+      prev.filter(
+        (m) => m._id !== deleteTarget._id
+      )
+    );
+
+    setDeleteTarget(null);
+    setPickerTarget(null);
+    setSelectedMessageId(null);
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+const handleDeleteForEveryone =
+  async () => {
+    try {
+      const { data } = await API.post(
+        `/messages/delete-for-everyone/${deleteTarget._id}`,
+        {
+          userId: user._id,
+        }
+      );
+      socket.emit(
+  "messageDeleted",
+  deleteTarget._id
+);
+      setMessages((prev) =>
+        prev.map((m) =>
+          m._id === data._id ? data : m
+        )
+      );
+
+      setDeleteTarget(null);
+      setPickerTarget(null);
+      setSelectedMessageId(null);
+    } catch (error) {
+      console.error(error);
+    }
+  };
   return (
     <div className="messages">
-      {messages.map((message) => (
+      {messages.map((message, index) => {
+  const previousMessage =
+    messages[index - 1];
+
+  const showDateSeparator =
+    !previousMessage ||
+    new Date(
+      previousMessage.createdAt
+    ).toDateString() !==
+      new Date(
+        message.createdAt
+      ).toDateString();
+
+  return (
+    <React.Fragment
+      key={message._id}
+    >
+  {showDateSeparator && (
+  <div className="date-separator">
+    <span>
+      {getDateLabel(
+        message.createdAt
+      )}
+    </span>
+  </div>
+)}
   <div
-    key={message._id}
     className={`message-row ${
       String(message.sender) ===
       String(user._id)
@@ -285,10 +400,9 @@ export default function MessageList({
   }`}
   onClick={() => {
     if (
-      reactionTarget ===
+      selectedMessageId ===
       message._id
     ) {
-      setReactionTarget(null);
       setPickerTarget(null);
       setSelectedMessageId(null);
   }
@@ -340,7 +454,7 @@ export default function MessageList({
             : "translateX(0)",
       }}
       onMouseLeave={() =>
-        setReactionTarget(null)
+        setSelectedMessageId(null)
       }
     >
 
@@ -365,8 +479,24 @@ export default function MessageList({
           </button>
 
           {/* MESSAGE TEXT */}
-          <div className="message-content">
-  {message.text}
+          <div
+  className={`message-content ${
+    message.deletedForEveryone
+      ? "deleted-message"
+      : ""
+  }`}
+>
+  {message.deletedForEveryone ? (
+    <>
+      <MdBlock className="deleted-icon" />
+      {String(message.sender) ===
+      String(user._id)
+        ? "You deleted this message"
+        : "This message was deleted"}
+    </>
+  ) : (
+    message.text
+  )}
 </div>
 
           {/* REACTIONS */}
@@ -382,9 +512,9 @@ export default function MessageList({
           </span>
 
           {/* QUICK REACTION BAR */}
-          {reactionTarget ===
-  message._id && (
-            <div className="reaction-bar">
+{selectedMessageId === message._id &&
+ !message.deletedForEveryone && (
+  <div className="reaction-bar">
               {QUICK_REACTIONS.map((emoji) => (
                 <span
                   key={emoji}
@@ -398,25 +528,35 @@ export default function MessageList({
                 className="plus-btn"
                 onClick={(e) => {
     e.stopPropagation();
-
     setPickerTarget(message._id);
   }}
               >
                 <MdAddReaction />
               </span>
+              <span
+  className="delete-btn"
+  onClick={(e) => {
+    e.stopPropagation();
+    setDeleteTarget(message);
+    setSelectedMessageId(null);
+  }}
+>
+  <MdDelete />
+</span>
             </div>
           )}
 
 </div>
 </div>
-))}
+</React.Fragment>
+);
+})}
 {pickerTarget && (
   <>
     <div
       className="emoji-picker-backdrop"
       onClick={() => {
         setPickerTarget(null);
-        setReactionTarget(null);
         setSelectedMessageId(null);
       }}
     />
@@ -439,6 +579,49 @@ export default function MessageList({
           )
         }
       />
+    </div>
+  </>
+)}
+{deleteTarget && (
+  <>
+    <div
+      className="emoji-picker-backdrop"
+      onClick={() =>{
+        setDeleteTarget(null)
+        setPickerTarget(null);
+        setSelectedMessageId(null);
+      }}
+    />
+
+    <div className="delete-popup">
+      <h4>Delete message?</h4>
+
+      <button
+        onClick={() =>{
+          setDeleteTarget(null)
+          setPickerTarget(null);
+          setSelectedMessageId(null);
+        }}
+      >
+        Cancel
+      </button>
+
+      <button
+        onClick={handleDeleteForMe}
+      >
+        Delete for me
+      </button>
+
+      {String(deleteTarget.sender) ===
+        String(user._id) && (
+        <button
+          onClick={
+            handleDeleteForEveryone
+          }
+        >
+          Delete for everyone
+        </button>
+      )}
     </div>
   </>
 )}

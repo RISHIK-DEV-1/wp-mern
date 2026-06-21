@@ -11,7 +11,7 @@ import API from "../utils/axios";
 import socket from "../utils/socket";
 
 import { AuthContext } from "../context/AuthContext";
-
+import { MdBlock } from "react-icons/md";
 import NewChatModal from "./NewChatModal";
 import { FiSearch } from "react-icons/fi";
 import "./Sidebar.css";
@@ -156,7 +156,10 @@ export default function Sidebar({
       "receiveMessage",
       handleReceiveMessage
     );
-
+    socket.on(
+  "chatListUpdated",
+  fetchChats
+);
     return () => {
       socket.off(
         "unreadCountUpdated",
@@ -167,6 +170,10 @@ export default function Sidebar({
         "receiveMessage",
         handleReceiveMessage
       );
+      socket.off(
+  "chatListUpdated",
+  fetchChats
+);
     };
   }, [user]);
 
@@ -356,21 +363,31 @@ export default function Sidebar({
                 </div>
 
                 <p
-                  className={`sidebar-status ${
-                    isTyping
-                      ? "typing"
-                      : ""
-                  }`}
-                >
-                  {isTyping
-                    ? "typing..."
-                    : String(
-                        chat.lastSender
-                      ) ===
-                      String(user._id)
-                    ? `You: ${chat.lastMessage}`
-                    : chat.lastMessage}
-                </p>
+  className={`sidebar-status ${
+    isTyping
+      ? "typing"
+      : ""
+  }`}
+>
+  {isTyping ? (
+    "typing..."
+  ) : chat.lastMessage ===
+      "This message was deleted" ||
+    chat.lastMessage ===
+      "You deleted this message" ? (
+    <>
+      <MdBlock
+        className="sidebar-deleted-icon"
+      />
+      {chat.lastMessage}
+    </>
+  ) : String(chat.lastSender) ===
+    String(user._id) ? (
+    `You: ${chat.lastMessage}`
+  ) : (
+    chat.lastMessage
+  )}
+</p>
               </div>
             </div>
           );

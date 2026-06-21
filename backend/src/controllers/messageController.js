@@ -36,6 +36,9 @@ export const getMessages = async (req, res) => {
         { sender: senderId, receiver: receiverId },
         { sender: receiverId, receiver: senderId },
       ],
+      deletedFor: {
+        $ne: senderId,
+      },
     })
       .populate("replyTo", "text sender")
       .sort({ createdAt: 1 });
@@ -130,6 +133,9 @@ export const getChatPreviews = async (req, res) => {
 
     const messages = await Message.find({
       $or: [{ sender: userId }, { receiver: userId }],
+    deletedFor: {
+    $ne: userId,
+  },
     })
       .sort({ createdAt: -1 })
       .populate("sender receiver", "name avatar lastSeen");
@@ -145,7 +151,11 @@ export const getChatPreviews = async (req, res) => {
       if (!chats[otherUser._id]) {
         chats[otherUser._id] = {
           user: otherUser,
-          lastMessage: message.text,
+          lastMessage: message.deletedForEveryone
+    ? String(message.sender._id) === String(userId)
+      ? "You deleted this message"
+      : "This message was deleted"
+    : message.text,
           lastMessageTime: message.createdAt,
           lastSender: String(message.sender._id),
           status: message.status,
@@ -200,5 +210,80 @@ export const toggleReaction = async (req, res) => {
     res.json(updatedMessage);
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+/* ================= DELETE FOR ME ================= */
+
+export const deleteForMe = async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const { userId } = req.body;
+
+    const message = await Message.findById(messageId);
+
+    if (!message) {
+      return res
+        .status(404)
+        .json({ message: "Message not found" });
+    }
+
+    if (
+      !message.deletedFor.some(
+        (id) => String(id) === String(userId)
+      )
+    ) {
+      message.deletedFor.push(userId);
+    }
+
+    await message.save();
+
+    res.json(message);
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
+/* ================= DELETE FOR EVERYONE ================= */
+
+export const deleteForEveryone = async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const { userId } = req.body;
+
+    const message = await Message.findById(messageId);
+
+    if (!message) {
+      return res
+        .status(404)
+        .json({ message: "Message not found" });
+    }
+
+    if (
+      String(message.sender) !== String(userId)
+    ) {
+      return res.status(403).json({
+        message:
+          "Only sender can delete for everyone",
+      });
+    }
+
+    message.deletedForEveryone = true;
+    message.reactions = [];
+    await message.save();
+
+    const updatedMessage =
+      await Message.findById(messageId)
+        .populate(
+          "replyTo",
+          "text sender"
+        );
+
+    res.json(updatedMessage);
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
   }
 };

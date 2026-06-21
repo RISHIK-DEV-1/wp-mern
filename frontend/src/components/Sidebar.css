@@ -340,6 +340,12 @@
 
   border-radius: 50%;
 }
+.sidebar-deleted-icon {
+  font-size: 14px;
+  margin-right: 4px;
+  vertical-align: middle;
+  opacity: 0.8;
+}
 /* ================= RESPONSIVE ================= */
 
 @media (max-width: 900px) {

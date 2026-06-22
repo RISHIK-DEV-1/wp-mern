@@ -179,20 +179,37 @@ export default function MessageList({
   /* ================= REPLY JUMP ================= */
 
   const scrollToMessage = (messageId) => {
-    const element = messageRefs.current[messageId];
-    if (!element) return;
+  const targetMessage = messages.find(
+    (m) => m._id === messageId
+  );
 
-    element.scrollIntoView({
-      behavior: "smooth",
-      block: "center",
-    });
+  if (
+    !targetMessage ||
+    targetMessage.deletedForEveryone
+  ) {
+    return;
+  }
 
-    element.classList.add("highlight-message");
+  const element =
+    messageRefs.current[messageId];
 
-    setTimeout(() => {
-      element.classList.remove("highlight-message");
-    }, 2000);
-  };
+  if (!element) return;
+
+  element.scrollIntoView({
+    behavior: "smooth",
+    block: "center",
+  });
+
+  element.classList.add(
+    "highlight-message"
+  );
+
+  setTimeout(() => {
+    element.classList.remove(
+      "highlight-message"
+    );
+  }, 2000);
+};
 
   /* ================= REACTIONS ================= */
 
@@ -477,7 +494,31 @@ const handleDeleteForEveryone =
           >
             <MdReply />
           </button>
+          {/* REPLY PREVIEW */}
+{message.replyTo && !message.deletedForEveryone && ( 
+  <div
+    className="reply-preview"
+    onClick={() =>
+      scrollToMessage(
+        message.replyTo?._id
+      )
+    }
+  >
+    <div className="reply-author">
+      {String(
+        message.replyTo?.sender
+      ) === String(user._id)
+        ? "You"
+        : selectedUser?.name}
+    </div>
 
+    <div className="reply-preview-text">
+      {message.replyTo?.deletedForEveryone
+        ? "Deleted message"
+        : message.replyTo?.text}
+    </div>
+  </div>
+)}
           {/* MESSAGE TEXT */}
           <div
   className={`message-content ${

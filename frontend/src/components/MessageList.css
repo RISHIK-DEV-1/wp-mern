@@ -237,6 +237,17 @@
 
   gap: 1px;
 }
+.message.received .message-time {
+  float: right;
+
+  margin-left: 6px;
+
+  margin-top: 7px;
+
+  position: relative;
+
+  top: 2px;
+}
 .msg-status-icon {
   font-size: 15px;
 

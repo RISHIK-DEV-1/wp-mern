@@ -58,7 +58,7 @@ export const markDelivered = async (req, res) => {
     const message = await Message.findByIdAndUpdate(
       messageId,
       { status: "delivered" },
-      { new: true }
+      { returnDocument: "after" }
     );
 
     if (!message) {
@@ -80,7 +80,7 @@ export const markRead = async (req, res) => {
     const message = await Message.findByIdAndUpdate(
       messageId,
       { status: "read" },
-      { new: true }
+      { returnDocument: "after" }
     );
 
     if (!message) {
@@ -247,43 +247,74 @@ export const deleteForMe = async (req, res) => {
 
 /* ================= DELETE FOR EVERYONE ================= */
 
-export const deleteForEveryone = async (req, res) => {
+export const deleteForEveryone = async (
+  req,
+  res
+) => {
   try {
-    const { messageId } = req.params;
     const { userId } = req.body;
 
-    const message = await Message.findById(messageId);
+    const message =
+      await Message.findById(
+        req.params.messageId
+      );
 
     if (!message) {
       return res
         .status(404)
-        .json({ message: "Message not found" });
+        .json({
+          message:
+            "Message not found",
+        });
     }
 
     if (
-      String(message.sender) !== String(userId)
+      String(message.sender) !==
+      String(userId)
     ) {
-      return res.status(403).json({
-        message:
-          "Only sender can delete for everyone",
-      });
+      return res
+        .status(403)
+        .json({
+          message:
+            "Not allowed",
+        });
     }
 
-    message.deletedForEveryone = true;
-    message.reactions = [];
+    const DELETE_WINDOW =
+      48 * 60 * 60 * 1000; // 48 hours
+
+    const messageAge =
+      Date.now() -
+      new Date(
+        message.createdAt
+      ).getTime();
+
+    if (
+      messageAge >
+      DELETE_WINDOW
+    ) {
+      return res
+        .status(400)
+        .json({
+          message:
+            "Delete for everyone period expired",
+        });
+    }
+
+    message.deletedForEveryone =
+      true;
+
     await message.save();
 
-    const updatedMessage =
-      await Message.findById(messageId)
-        .populate(
-          "replyTo",
-          "text sender"
-        );
-
-    res.json(updatedMessage);
+    return res.json(
+      message
+    );
   } catch (error) {
-    res.status(500).json({
-      message: error.message,
-    });
+    return res
+      .status(500)
+      .json({
+        message:
+          error.message,
+      });
   }
 };

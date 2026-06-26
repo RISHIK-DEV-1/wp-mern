@@ -11,7 +11,7 @@
   height: 100vh;
 
   background: #0b141a;
-
+  overflow: hidden;
 }
 
 /* =========================
@@ -57,3 +57,4 @@
     display: none;
   }
 }
+

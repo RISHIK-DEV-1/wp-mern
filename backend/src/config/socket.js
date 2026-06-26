@@ -42,7 +42,7 @@ export const initSocket = (server) => {
           updatedMessage = await Message.findByIdAndUpdate(
             message._id,
             { status: "delivered" },
-            { new: true }
+            { returnDocument: "after" }
           ).populate("replyTo", "text sender");
         } else {
           updatedMessage = await Message.findById(message._id).populate(
@@ -74,7 +74,7 @@ export const initSocket = (server) => {
         const message = await Message.findByIdAndUpdate(
           messageId,
           { status: "read" },
-          { new: true }
+          { returnDocument: "after" }
         ).populate("replyTo", "text sender");
 
         if (!message) return;
@@ -203,7 +203,7 @@ socket.on("messageDeleted", async (messageId) => {
           const updatedUser = await User.findByIdAndUpdate(
             userId,
             { lastSeen: new Date() },
-            { new: true }
+            { returnDocument: "after" }
           );
 
           io.emit("lastSeenUpdated", {

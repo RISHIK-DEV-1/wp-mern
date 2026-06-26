@@ -1,12 +1,15 @@
 import React from "react";
 import "./ChatHeader.css";
-
+import { MdDelete } from "react-icons/md";
 export default function ChatHeader({
   selectedUser,
   setSelectedUser,
   typing,
   onlineUsers,
   lastSeen,
+  selectedMessages,
+  setSelectedMessages,
+  setShowDeletePopup,
 }) {
   const isOnline = onlineUsers.includes(
     String(selectedUser?._id)
@@ -24,51 +27,74 @@ export default function ChatHeader({
       minute: "2-digit",
     })}`;
   };
-
+   const selectionMode =
+  selectedMessages?.length > 0;
   return (
     <div className="chat-header">
       <button
   className="back-btn"
   onClick={() => {
-    setSelectedUser?.(null);
+  if (selectionMode) {
+    setSelectedMessages([]);
+    return;
+  }
 
-    localStorage.removeItem(
-      "selectedChat"
-    );
+  setSelectedUser(null);
 
-    window.history.back();
-  }}
+  localStorage.removeItem(
+    "selectedChat"
+  );
+
+  window.history.back();
+}}
 >
   ←
 </button>
 
-      <div className="header-avatar">
-  {selectedUser?.avatar ? (
-    <img
-      src={
-        selectedUser.avatar
-      }
-      alt=""
-      className="header-avatar-img"
-    />
-  ) : (
-    selectedUser?.name
-      ?.charAt(0)
-      .toUpperCase()
-  )}
-</div>
+      {selectionMode ? (
+  <>
+    <div className="selection-count">
+      {selectedMessages.length} selected
+    </div>
 
-      <div className="chat-header-info">
-        <h4>{selectedUser?.name}</h4>
+    <button
+      className="header-action-btn"
+      onClick={() =>
+  setShowDeletePopup(true)
+}
+    >
+      <MdDelete />
+    </button>
+  </>
+) : (
+  <>
+    <div className="header-avatar">
+      {selectedUser?.avatar ? (
+        <img
+          src={selectedUser.avatar}
+          alt=""
+          className="header-avatar-img"
+        />
+      ) : (
+        selectedUser?.name
+          ?.charAt(0)
+          .toUpperCase()
+      )}
+    </div>
 
-        <p className={typing ? "typing" : ""}>
-          {typing
-            ? "typing"
-            : isOnline
-            ? "Online"
-            : formatLastSeen(lastSeen)}
-        </p>
-      </div>
+  <div className="chat-header-info">
+    <h4>{selectedUser?.name}</h4>
+
+    <p className={typing ? "typing" : ""}>
+      {typing
+        ? "typing"
+        : isOnline
+        ? "Online"
+        : formatLastSeen(lastSeen)}
+    </p>
+  </div>
+  </>
+)}
     </div>
   );
 }

@@ -10,7 +10,6 @@ import {
   MdAddReaction,
   MdDone,
   MdDoneAll,
-  MdDelete,
   MdBlock,
 } from "react-icons/md";
 
@@ -30,6 +29,8 @@ export default function MessageList({
   messages,
   setMessages,
   setReplyMessage,
+  selectedMessages,
+  setSelectedMessages,
 }) {
   const { user } = useContext(AuthContext);
 
@@ -43,11 +44,23 @@ export default function MessageList({
 
   const [swipingId, setSwipingId] = useState(null);
   const [swipeDistance, setSwipeDistance] = useState(0);
-  const [deleteTarget, setDeleteTarget] =
-  useState(null);
   const [pickerTarget, setPickerTarget] = useState(null);
   const [selectedMessageId, setSelectedMessageId] =
   useState(null);
+ 
+  const toggleMessageSelection = (
+  messageId
+) => {
+  setSelectedMessages((prev) => {
+    if (prev.includes(messageId)) {
+      return prev.filter(
+        (id) => id !== messageId
+      );
+    }
+
+    return [...prev, messageId];
+  });
+};
   /* ================= FETCH ================= */
 
   const fetchMessages = async () => {
@@ -67,7 +80,12 @@ export default function MessageList({
   useEffect(() => {
     fetchMessages();
   }, [selectedUser]);
-
+  useEffect(() => {
+  if (selectedMessages.length !== 1) {
+    setSelectedMessageId(null);
+    setPickerTarget(null);
+  }
+}, [selectedMessages]);
   /* ================= SOCKET ================= */
 
   useEffect(() => {
@@ -255,9 +273,15 @@ export default function MessageList({
   e.changedTouches[0].clientY;
 
     longPressTimer.current = setTimeout(() => {
-  setSelectedMessageId(
-    message._id
-  );
+  setSelectedMessages((prev) => {
+    if (prev.includes(message._id)) {
+      return prev;
+    }
+
+    return [...prev, message._id];
+  });
+
+  setSelectedMessageId(message._id);
 }, 280);
   };
 
@@ -323,58 +347,7 @@ if (
     year: "numeric",
   });
 };
-   const handleDeleteForMe = async () => {
-  try {
-    await API.post(
-      `/messages/delete-for-me/${deleteTarget._id}`,
-      {
-        userId: user._id,
-      }
-    );
-    socket.emit(
-  "messageDeleted",
-  deleteTarget._id
-);
-    setMessages((prev) =>
-      prev.filter(
-        (m) => m._id !== deleteTarget._id
-      )
-    );
-
-    setDeleteTarget(null);
-    setPickerTarget(null);
-    setSelectedMessageId(null);
-  } catch (error) {
-    console.error(error);
-  }
-};
-
-const handleDeleteForEveryone =
-  async () => {
-    try {
-      const { data } = await API.post(
-        `/messages/delete-for-everyone/${deleteTarget._id}`,
-        {
-          userId: user._id,
-        }
-      );
-      socket.emit(
-  "messageDeleted",
-  deleteTarget._id
-);
-      setMessages((prev) =>
-        prev.map((m) =>
-          m._id === data._id ? data : m
-        )
-      );
-
-      setDeleteTarget(null);
-      setPickerTarget(null);
-      setSelectedMessageId(null);
-    } catch (error) {
-      console.error(error);
-    }
-  };
+   
   return (
     <div className="messages">
       {messages.map((message, index) => {
@@ -411,19 +384,17 @@ const handleDeleteForEveryone =
         : "received-row"
 
   } ${
-      selectedMessageId === message._id
+      selectedMessages.includes(message._id)
       ? "message-row-active"
       : ""
   }`}
   onClick={() => {
-    if (
-      selectedMessageId ===
+  if (selectedMessages.length > 0) {
+    toggleMessageSelection(
       message._id
-    ) {
-      setPickerTarget(null);
-      setSelectedMessageId(null);
+    );
   }
-  }}
+}}
     onTouchStart={(e) =>
       handleTouchStart(
         e,
@@ -574,16 +545,6 @@ const handleDeleteForEveryone =
               >
                 <MdAddReaction />
               </span>
-              <span
-  className="delete-btn"
-  onClick={(e) => {
-    e.stopPropagation();
-    setDeleteTarget(message);
-    setSelectedMessageId(null);
-  }}
->
-  <MdDelete />
-</span>
             </div>
           )}
 
@@ -623,49 +584,7 @@ const handleDeleteForEveryone =
     </div>
   </>
 )}
-{deleteTarget && (
-  <>
-    <div
-      className="emoji-picker-backdrop"
-      onClick={() =>{
-        setDeleteTarget(null)
-        setPickerTarget(null);
-        setSelectedMessageId(null);
-      }}
-    />
-
-    <div className="delete-popup">
-      <h4>Delete message?</h4>
-
-      <button
-        onClick={() =>{
-          setDeleteTarget(null)
-          setPickerTarget(null);
-          setSelectedMessageId(null);
-        }}
-      >
-        Cancel
-      </button>
-
-      <button
-        onClick={handleDeleteForMe}
-      >
-        Delete for me
-      </button>
-
-      {String(deleteTarget.sender) ===
-        String(user._id) && (
-        <button
-          onClick={
-            handleDeleteForEveryone
-          }
-        >
-          Delete for everyone
-        </button>
-      )}
-    </div>
-  </>
-)}
+  
 <div ref={messagesEndRef} />
 </div>
 );

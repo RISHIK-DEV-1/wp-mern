@@ -1,3 +1,4 @@
+import { useLocation } from "react-router-dom";
 import React, {
   useState,
   useEffect,
@@ -16,7 +17,7 @@ import "./Chat.css";
 export default function Chat() {
   const { user } =
     useContext(AuthContext);
-
+  const location = useLocation();
   const [selectedUser, setSelectedUser] =
     useState(null);
 
@@ -45,6 +46,7 @@ export default function Chat() {
       );
     }
   }, []);
+  
 
   /* ================= SAVE OPEN CHAT ================= */
 

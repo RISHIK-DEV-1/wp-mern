@@ -92,7 +92,12 @@
 
   color: white;
 }
-
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: auto;
+}
 .header-action-btn {
   width: 40px;
   height: 40px;

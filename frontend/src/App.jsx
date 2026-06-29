@@ -14,7 +14,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import ProfilePage from "./pages/ProfilePage";
 import ProtectedRoute from "./routes/ProtectedRoute";
-
+import ForwardScreen from "./pages/ForwardScreen";
 import "./index.css";
 
 export default function App() {
@@ -63,6 +63,7 @@ export default function App() {
   path="/profile"
   element={<ProfilePage />}
 />
+        <Route path="/forward" element={<ForwardScreen />} />
       </Routes>
     </BrowserRouter>
   );

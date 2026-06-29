@@ -62,6 +62,15 @@ deletedFor: [
     ref: "User",
   },
 ],
+forwarded: {
+  type: Boolean,
+  default: false,
+},
+
+forwardCount: {
+  type: Number,
+  default: 0,
+},
 },
   {
     timestamps: true,

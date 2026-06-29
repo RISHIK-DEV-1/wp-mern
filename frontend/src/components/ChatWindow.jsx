@@ -1,14 +1,13 @@
+import { useNavigate } from "react-router-dom";
 import React, {
   useState,
   useEffect,
   useContext,
   useCallback,
 } from "react";
-
 import ChatHeader from "./ChatHeader";
 import MessageList from "./MessageList";
 import MessageInput from "./MessageInput";
-
 import socket from "../utils/socket";
 import { AuthContext } from "../context/AuthContext";
 import API from "../utils/axios";
@@ -21,17 +20,27 @@ export default function ChatWindow({
   onlineUsers,
 }) {
   const { user } = useContext(AuthContext);
+  const navigate = useNavigate();
   const [selectedMessages, setSelectedMessages] =
   useState([]);
   const [messages, setMessages] = useState([]);
   const [replyMessage, setReplyMessage] = useState(null);
   const [showDeletePopup, setShowDeletePopup] =
   useState(false);
-
   const selectedMessageObjects =
   messages.filter((m) =>
     selectedMessages.includes(m._id)
   );
+ 
+  const openForwardScreen = () => {
+  if (selectedMessages.length === 0) return;
+
+  navigate("/forward", {
+    state: {
+      messageIds: selectedMessages,
+    },
+  });
+};
 
 const canDeleteForEveryone =
   selectedMessageObjects.length > 0 &&
@@ -53,6 +62,9 @@ const canDeleteForEveryone =
       !m.deletedForEveryone
     );
   });
+
+ 
+
   /* ================= ADD MESSAGE (LOCAL SEND) ================= */
 
   const handleNewMessage = useCallback((message) => {
@@ -218,6 +230,7 @@ const canDeleteForEveryone =
             selectedMessages={selectedMessages}
             setSelectedMessages={setSelectedMessages}
             setShowDeletePopup={setShowDeletePopup}
+            openForwardScreen={openForwardScreen}
           />
 
           <MessageList
@@ -235,7 +248,7 @@ const canDeleteForEveryone =
             replyMessage={replyMessage}
             setReplyMessage={setReplyMessage}
           />
-          
+     
           {showDeletePopup && (
   <>
     <div

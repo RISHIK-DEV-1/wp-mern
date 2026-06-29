@@ -2,9 +2,9 @@ import { Server } from "socket.io";
 import Message from "../models/Message.js";
 import User from "../models/User.js";
 
-const onlineUsers = new Map();
+export const onlineUsers = new Map();
 const offlineTimers = new Map();
-
+export let ioInstance = null;
 export const initSocket = (server) => {
   const io = new Server(server, {
     cors: {
@@ -12,7 +12,7 @@ export const initSocket = (server) => {
       credentials: true,
     },
   });
-
+  ioInstance = io;
   io.on("connection", (socket) => {
     /* ================= JOIN ================= */
 

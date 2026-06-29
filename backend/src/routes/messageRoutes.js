@@ -9,6 +9,7 @@ import {
   toggleReaction,
   deleteForMe,
   deleteForEveryone,
+  forwardMessages,
 } from "../controllers/messageController.js";
 
 const router = express.Router();
@@ -35,5 +36,10 @@ router.post(
 router.post(
   "/delete-for-everyone/:messageId",
   deleteForEveryone
+);
+
+router.post(
+  "/forward",
+  forwardMessages
 );
 export default router;

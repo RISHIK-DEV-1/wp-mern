@@ -1,6 +1,7 @@
 import React from "react";
 import "./ChatHeader.css";
 import { MdDelete } from "react-icons/md";
+import { LuForward } from "react-icons/lu";
 export default function ChatHeader({
   selectedUser,
   setSelectedUser,
@@ -10,6 +11,7 @@ export default function ChatHeader({
   selectedMessages,
   setSelectedMessages,
   setShowDeletePopup,
+  openForwardScreen,
 }) {
   const isOnline = onlineUsers.includes(
     String(selectedUser?._id)
@@ -57,14 +59,25 @@ export default function ChatHeader({
       {selectedMessages.length} selected
     </div>
 
-    <button
-      className="header-action-btn"
-      onClick={() =>
-  setShowDeletePopup(true)
-}
-    >
-      <MdDelete />
-    </button>
+    <div className="header-actions">
+
+  {/* DELETE FIRST (IMPORTANT) */}
+  <button
+    className="header-action-btn"
+    onClick={() => setShowDeletePopup(true)}
+  >
+    <MdDelete />
+  </button>
+
+  {/* FORWARD SECOND */}
+  <button
+    className="header-action-btn"
+    onClick={openForwardScreen}
+  >
+    <LuForward />
+  </button>
+
+</div>
   </>
 ) : (
   <>

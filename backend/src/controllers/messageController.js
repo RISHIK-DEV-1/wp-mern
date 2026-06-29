@@ -1,11 +1,11 @@
 import mongoose from "mongoose";
 import Message from "../models/Message.js";
-
+import { ioInstance,onlineUsers, } from "../config/socket.js";
 /* ================= SEND MESSAGE ================= */
 
 export const sendMessage = async (req, res) => {
   try {
-    const { sender, receiver, text, replyTo } = req.body;
+    const { sender, receiver, text, replyTo,forwarded = false,forwardCount = 0, } = req.body;
 
     if (!sender || !receiver || !text?.trim()) {
       return res.status(400).json({ message: "All fields are required" });
@@ -16,6 +16,8 @@ export const sendMessage = async (req, res) => {
       receiver,
       text,
       replyTo: replyTo || null,
+      forwarded,
+      forwardCount,
       status: "sent",
     });
 
@@ -316,5 +318,62 @@ export const deleteForEveryone = async (
         message:
           error.message,
       });
+  }
+};
+/* ================= FORWARD MESSAGE ================= */
+ export const forwardMessages = async (req, res) => {
+  try {
+    const { sender, receiver, messageIds } = req.body;
+
+    if (
+      !sender ||
+      !receiver ||
+      !Array.isArray(messageIds) ||
+      messageIds.length === 0
+    ) {
+      return res.status(400).json({ message: "Missing data" });
+    }
+
+    const originalMessages = await Message.find({
+      _id: { $in: messageIds },
+    });
+
+    if (!originalMessages.length) {
+      return res.status(404).json({ message: "No messages found" });
+    }
+
+    // ⚡ CREATE ALL MESSAGES IN ONE GO
+    const forwardedMessages = await Message.insertMany(
+      originalMessages.map((msg) => ({
+        sender,
+        receiver,
+        text: msg.text,
+        replyTo: null,
+        forwarded: true,
+        forwardCount: (msg.forwardCount || 0) + 1,
+        status: "sent",
+      }))
+    );
+
+    // ⚡ SINGLE POPULATION (not per message loop)
+    const populated = await Message.find({
+      _id: { $in: forwardedMessages.map((m) => m._id) },
+    }).populate("replyTo", "text sender");
+
+    const receiverSocketId = onlineUsers.get(String(receiver));
+    const senderSocketId = onlineUsers.get(String(sender));
+
+    // ⚡ SINGLE EMIT (not loop emit)
+    if (receiverSocketId) {
+      ioInstance.to(receiverSocketId).emit("receiveMessage", populated);
+    }
+
+    if (senderSocketId) {
+      ioInstance.to(senderSocketId).emit("receiveMessage", populated);
+    }
+
+    return res.status(201).json(populated);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
   }
 };

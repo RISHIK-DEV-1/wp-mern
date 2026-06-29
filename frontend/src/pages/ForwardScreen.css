@@ -143,9 +143,10 @@
   transition: background 0.2s ease;
 }
 
-.forward-chat:hover:not(.selected) {
-    background: #1f2c33;
+.forward-chat:active {
+  background: transparent;
 }
+
 
 .forward-chat.selected {
   background: rgba(0, 168, 132, 0.12);

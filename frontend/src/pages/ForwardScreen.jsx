@@ -92,45 +92,42 @@ export default function ForwardScreen() {
     ]);
   };
 
-  const handleForward = async () => {
-  try {
-    if (selectedChats.length === 0) return;
+  const handleForward = () => {
+  if (selectedChats.length === 0) return;
+     if (selectedChats.length > 1) {
+  sessionStorage.setItem(
+    "showSendingToast",
+    "true"
+  );
+}
+  // Open destination immediately
+  if (selectedChats.length === 1) {
+    const chat = chats.find(
+      (c) => c.user._id === selectedChats[0]
+    );
 
-    await Promise.all(
-  selectedChats.map((receiverId) =>
+    localStorage.setItem(
+      "selectedChat",
+      JSON.stringify(chat.user)
+    );
+    
+    navigate("/chat", {
+  replace: true,
+});
+  } else {
+    navigate(-1);
+  }
+
+  // Fire requests in background
+  selectedChats.forEach((receiverId) => {
     API.post("/messages/forward", {
       sender: user._id,
       receiver: receiverId,
       messageIds,
-    })
-  )
-);
-
-if (selectedChats.length === 1) {
-  const chat = chats.find(
-    (c) => c.user._id === selectedChats[0]
-  );
-
-  localStorage.setItem(
-  "selectedChat",
-  JSON.stringify(chat.user)
-);
-
-setTimeout(() => {
-  navigate("/chat", { replace: true });
-}, 150);
-
-  return;
-}
-
-setShowSending(true);
-setTimeout(() => {
-  setShowSending(false);
-  navigate(-1);
-}, 1500);
-  } catch (err) {
-    console.error("Forward failed:", err);
-  }
+    }).catch((err) => {
+      console.error("Forward failed:", err);
+    });
+  });
 };
 
  return (

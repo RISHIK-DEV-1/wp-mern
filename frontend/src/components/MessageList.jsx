@@ -17,7 +17,7 @@ import EmojiPicker from "emoji-picker-react";
 
 import API from "../utils/axios";
 import socket from "../utils/socket";
-
+import { MdKeyboardDoubleArrowDown } from "react-icons/md";
 import { AuthContext } from "../context/AuthContext";
 
 import "./MessageList.css";
@@ -35,6 +35,20 @@ export default function MessageList({
   const { user } = useContext(AuthContext);
 
   const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
+
+const isInitialLoad = useRef(true);
+
+
+const [showScrollButton, setShowScrollButton] =
+  useState(false);
+  const [floatingDate, setFloatingDate] =
+  useState("");
+
+const [showFloatingDate, setShowFloatingDate] =
+  useState(false);
+
+const floatingDateTimer = useRef(null);
   const messageRefs = useRef({});
 
   const touchStartX = useRef(0);
@@ -47,7 +61,7 @@ export default function MessageList({
   const [pickerTarget, setPickerTarget] = useState(null);
   const [selectedMessageId, setSelectedMessageId] =
   useState(null);
- 
+
   const toggleMessageSelection = (
   messageId
 ) => {
@@ -136,12 +150,99 @@ export default function MessageList({
   }, [messages, selectedUser]);
 
   /* ================= AUTO SCROLL ================= */
+   useEffect(() => {
+  isInitialLoad.current = true;
+}, [selectedUser]);
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({
-      behavior: "smooth",
+   useEffect(() => {
+  const container =
+    messagesContainerRef.current;
+
+  if (!container) return;
+
+  const handleScroll = () => {
+  const distance =
+    container.scrollHeight -
+    container.scrollTop -
+    container.clientHeight;
+
+  setShowScrollButton(distance > 80);
+
+  // Show floating date while scrolling
+  setShowFloatingDate(true);
+
+  clearTimeout(floatingDateTimer.current);
+
+  floatingDateTimer.current = setTimeout(() => {
+    setShowFloatingDate(false);
+  }, 700);
+
+  // Find first visible date
+  const separators =
+    container.querySelectorAll(".date-separator");
+
+  for (const separator of separators) {
+    const rect =
+      separator.getBoundingClientRect();
+
+    const containerRect =
+      container.getBoundingClientRect();
+
+    if (rect.bottom > containerRect.top + 8) {
+      setFloatingDate(
+        separator.dataset.date
+      );
+      break;
+    }
+  }
+};
+
+  container.addEventListener(
+    "scroll",
+    handleScroll
+  );
+
+  return () => {
+  container.removeEventListener(
+    "scroll",
+    handleScroll
+  );
+
+};
+}, [selectedUser]);
+
+   useEffect(() => {
+  const container =
+    messagesContainerRef.current;
+
+  if (!container) return;
+
+  // Initial chat opening
+  if (
+    isInitialLoad.current &&
+    messages.length > 0
+  ) {
+    isInitialLoad.current = false;
+
+    requestAnimationFrame(() => {
+      container.scrollTop =
+        container.scrollHeight;
     });
-  }, [messages]);
+
+    return;
+  }
+
+  // Only auto jump if already near bottom
+  const distanceFromBottom =
+    container.scrollHeight -
+    container.scrollTop -
+    container.clientHeight;
+
+  if (distanceFromBottom < 120) {
+    container.scrollTop =
+      container.scrollHeight;
+  }
+}, [messages]);
   /*===== EMOJI PICKER LOCK SCROLL ====== */
   useEffect(() => {
   if (pickerTarget) {
@@ -347,9 +448,28 @@ if (
     year: "numeric",
   });
 };
-   
+  const jumpToBottom = () => {
+  const container =
+    messagesContainerRef.current;
+
+  if (!container) return;
+
+  container.scrollTop =
+    container.scrollHeight;
+};
   return (
-    <div className="messages">
+    <div
+  className="messages"
+  ref={messagesContainerRef}
+>
+   <div
+  className={`floating-date-pill ${
+    showFloatingDate ? "show" : ""
+  }`}
+>
+  {floatingDate}
+</div>
+
       {messages.map((message, index) => {
   const previousMessage =
     messages[index - 1];
@@ -368,7 +488,12 @@ if (
       key={message._id}
     >
   {showDateSeparator && (
-  <div className="date-separator">
+  <div
+  className="date-separator"
+  data-date={getDateLabel(
+    message.createdAt
+  )}
+>
     <span>
       {getDateLabel(
         message.createdAt
@@ -466,7 +591,7 @@ if (
             <MdReply />
           </button>
           {/* REPLY PREVIEW */}
-{message.replyTo && !message.deletedForEveryone && ( 
+{message.replyTo && !message.deletedForEveryone && (
   <div
     className="reply-preview"
     onClick={() =>
@@ -584,7 +709,14 @@ if (
     </div>
   </>
 )}
-  
+  {showScrollButton && (
+  <button
+    className="scroll-bottom-btn"
+    onClick={jumpToBottom}
+  >
+    <MdKeyboardDoubleArrowDown />
+  </button>
+)}
 <div ref={messagesEndRef} />
 </div>
 );

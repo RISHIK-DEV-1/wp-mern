@@ -31,7 +31,8 @@ export default function Chat() {
 
   const [onlineUsers, setOnlineUsers] =
     useState([]);
-
+  const [showSendingToast, setShowSendingToast] =
+  useState(false);
   /* ================= RESTORE OPEN CHAT ================= */
 
   useEffect(() => {
@@ -46,7 +47,27 @@ export default function Chat() {
       );
     }
   }, []);
-  
+
+  useEffect(() => {
+  const shouldShow =
+    sessionStorage.getItem(
+      "showSendingToast"
+    );
+
+  if (!shouldShow) return;
+
+  sessionStorage.removeItem(
+    "showSendingToast"
+  );
+
+  setShowSendingToast(true);
+
+  const timer = setTimeout(() => {
+    setShowSendingToast(false);
+  }, 1500);
+
+  return () => clearTimeout(timer);
+}, []);
 
   /* ================= SAVE OPEN CHAT ================= */
 
@@ -62,7 +83,16 @@ export default function Chat() {
       );
     }
   }, [selectedUser]);
-  
+
+  /*fix 1 */
+useEffect(() => {
+  if (!selectedUser?._id || !user?._id) return;
+
+  socket.emit("markChatRead", {
+    userId: user._id,
+    otherUserId: selectedUser._id,
+  });
+}, [selectedUser, user]);
   /* ================= MOBILE HISTORY ================= */
 
 useEffect(() => {
@@ -212,7 +242,8 @@ useEffect(() => {
 
   if (isMobile) {
     return (
-      <div className="chat-container">
+  <>
+    <div className="chat-container">
         {selectedUser ? (
           <ChatWindow
             selectedUser={selectedUser}
@@ -242,13 +273,21 @@ useEffect(() => {
             }
           />
         )}
-      </div>
-    );
+          </div>
+
+    {showSendingToast && (
+  <div className="chat-sending-toast">
+    Sending messages...
+  </div>
+)}
+  </>
+);
   }
 
   /* ================= DESKTOP VIEW ================= */
 
   return (
+  <>
     <div className="chat-container">
       <Sidebar
         selectedUser={
@@ -277,6 +316,13 @@ useEffect(() => {
           onlineUsers
         }
       />
-    </div>
-  );
+        </div>
+
+    {showSendingToast && (
+      <div className="chat-sending-toast">
+        Sending messages...
+      </div>
+    )}
+  </>
+);
 }

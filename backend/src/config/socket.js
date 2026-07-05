@@ -85,16 +85,43 @@ export const initSocket = (server) => {
           io.to(senderSocketId).emit("messageStatusUpdated", message);
         }
 
-        const receiverSocketId = onlineUsers.get(String(message.receiver));
-
-        if (receiverSocketId) {
-          io.to(receiverSocketId).emit("unreadCountUpdated");
-        }
+        // Refresh unread badge for the user who just opened the chat
+socket.emit("unreadCountUpdated");
       } catch (error) {
         console.log(error);
       }
     });
+    /* ================= MARK ENTIRE CHAT READ ================= */
 
+socket.on("markChatRead", async ({ userId, otherUserId }) => {
+  try {
+    await Message.updateMany(
+      {
+        sender: otherUserId,
+        receiver: userId,
+        status: { $ne: "read" },
+      },
+      {
+        status: "read",
+      }
+    );
+
+    const receiverSocketId = onlineUsers.get(String(userId));
+
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("unreadCountUpdated");
+      io.to(receiverSocketId).emit("chatListUpdated");
+    }
+
+    const senderSocketId = onlineUsers.get(String(otherUserId));
+
+    if (senderSocketId) {
+      io.to(senderSocketId).emit("chatListUpdated");
+    }
+  } catch (error) {
+    console.log(error);
+  }
+});
     /* ================= TYPING ================= */
 
     socket.on("typing", ({ sender, receiver }) => {

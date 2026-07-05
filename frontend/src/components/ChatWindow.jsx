@@ -27,11 +27,12 @@ export default function ChatWindow({
   const [replyMessage, setReplyMessage] = useState(null);
   const [showDeletePopup, setShowDeletePopup] =
   useState(false);
+
   const selectedMessageObjects =
   messages.filter((m) =>
     selectedMessages.includes(m._id)
   );
- 
+
   const openForwardScreen = () => {
   if (selectedMessages.length === 0) return;
 
@@ -63,7 +64,7 @@ const canDeleteForEveryone =
     );
   });
 
- 
+
 
   /* ================= ADD MESSAGE (LOCAL SEND) ================= */
 
@@ -73,7 +74,7 @@ const canDeleteForEveryone =
       return exists ? prev : [...prev, message];
     });
   }, []);
- 
+
   /*DELETE FOR ME */
   const handleDeleteForMe =
   async () => {
@@ -248,7 +249,7 @@ const canDeleteForEveryone =
             replyMessage={replyMessage}
             setReplyMessage={setReplyMessage}
           />
-     
+
           {showDeletePopup && (
   <>
     <div

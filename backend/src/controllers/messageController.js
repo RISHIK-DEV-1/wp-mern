@@ -355,24 +355,29 @@ export const deleteForEveryone = async (
       }))
     );
 
-    // ⚡ SINGLE POPULATION (not per message loop)
-    const populated = await Message.find({
-      _id: { $in: forwardedMessages.map((m) => m._id) },
-    }).populate("replyTo", "text sender");
+    const receiverSocketId =
+  onlineUsers.get(String(receiver));
 
-    const receiverSocketId = onlineUsers.get(String(receiver));
-    const senderSocketId = onlineUsers.get(String(sender));
+const senderSocketId =
+  onlineUsers.get(String(sender));
 
-    // ⚡ SINGLE EMIT (not loop emit)
-    if (receiverSocketId) {
-      ioInstance.to(receiverSocketId).emit("receiveMessage", populated);
-    }
+forwardedMessages.forEach((message) => {
+  if (receiverSocketId) {
+    ioInstance.to(receiverSocketId).emit(
+      "receiveMessage",
+      message
+    );
+  }
 
-    if (senderSocketId) {
-      ioInstance.to(senderSocketId).emit("receiveMessage", populated);
-    }
+  if (senderSocketId) {
+    ioInstance.to(senderSocketId).emit(
+      "receiveMessage",
+      message
+    );
+  }
+});
 
-    return res.status(201).json(populated);
+return res.status(201).json(forwardedMessages);
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }

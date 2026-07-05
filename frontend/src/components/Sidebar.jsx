@@ -146,7 +146,10 @@ export default function Sidebar({
         message.sender
       );
     };
-
+    const handleChatListUpdated = () => {
+  fetchChats();
+  fetchUnreadCounts();
+};
     socket.on(
       "unreadCountUpdated",
       handleUnreadUpdate
@@ -156,7 +159,7 @@ export default function Sidebar({
       "receiveMessage",
       handleReceiveMessage
     );
-    
+    socket.on("chatListUpdated", handleChatListUpdated);
     return () => {
       socket.off(
         "unreadCountUpdated",
@@ -167,6 +170,7 @@ export default function Sidebar({
         "receiveMessage",
         handleReceiveMessage
       );
+      socket.off("chatListUpdated", handleChatListUpdated);
     };
   }, [user]);
 
@@ -206,8 +210,8 @@ export default function Sidebar({
       .includes(
         searchTerm.toLowerCase()
       )
-  ); 
-   
+  );
+
   return (
     <div className="sidebar">
 
@@ -300,9 +304,14 @@ export default function Sidebar({
                   ? "active"
                   : ""
               }`}
-              onClick={() =>
-                setSelectedUser(u)
-              }
+              onClick={() => {
+  setSelectedUser(u);
+
+  setUnreadCounts((prev) => ({
+    ...prev,
+    [u._id]: 0,
+  }));
+}}
             >
               <div className="avatar-wrapper">
                 <div className="avatar">
@@ -341,10 +350,8 @@ export default function Sidebar({
                     }}
                   >
                     <small>
-                      {formatTime(
-                        chat.lastMessageTime
-                      )}
-                    </small>
+  {formatTime(chat.lastMessageTime)}
+</small>
 
                     {unreadCounts[u._id] >
                       0 && (

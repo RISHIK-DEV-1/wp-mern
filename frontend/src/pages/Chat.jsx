@@ -84,15 +84,6 @@ export default function Chat() {
     }
   }, [selectedUser]);
 
-  /*fix 1 */
-useEffect(() => {
-  if (!selectedUser?._id || !user?._id) return;
-
-  socket.emit("markChatRead", {
-    userId: user._id,
-    otherUserId: selectedUser._id,
-  });
-}, [selectedUser, user]);
   /* ================= MOBILE HISTORY ================= */
 
 useEffect(() => {

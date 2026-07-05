@@ -146,10 +146,7 @@ export default function Sidebar({
         message.sender
       );
     };
-    const handleChatListUpdated = () => {
-  fetchChats();
-  fetchUnreadCounts();
-};
+ 
     socket.on(
       "unreadCountUpdated",
       handleUnreadUpdate
@@ -159,7 +156,7 @@ export default function Sidebar({
       "receiveMessage",
       handleReceiveMessage
     );
-    socket.on("chatListUpdated", handleChatListUpdated);
+ 
     return () => {
       socket.off(
         "unreadCountUpdated",
@@ -170,7 +167,6 @@ export default function Sidebar({
         "receiveMessage",
         handleReceiveMessage
       );
-      socket.off("chatListUpdated", handleChatListUpdated);
     };
   }, [user]);
 

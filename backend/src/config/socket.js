@@ -69,29 +69,56 @@ export const initSocket = (server) => {
 
     /* ================= MARK READ ================= */
 
-    socket.on("markRead", async (messageId) => {
-      try {
-        const message = await Message.findByIdAndUpdate(
-          messageId,
-          { status: "read" },
-          { returnDocument: "after" }
-        ).populate("replyTo", "text sender");
+    /* ================= MARK CONVERSATION READ ================= */
 
-        if (!message) return;
+socket.on(
+  "conversationRead",
+  async ({
+    senderId,
+    receiverId,
+  }) => {
+    try {
+      const receiverSocketId =
+        onlineUsers.get(
+          String(receiverId)
+        );
 
-        const senderSocketId = onlineUsers.get(String(message.sender));
-
-        if (senderSocketId) {
-          io.to(senderSocketId).emit("messageStatusUpdated", message);
-        }
-
-        // Refresh unread badge for the user who just opened the chat
-socket.emit("unreadCountUpdated");
-      } catch (error) {
-        console.log(error);
+      if (receiverSocketId) {
+        io.to(receiverSocketId).emit(
+          "unreadCountUpdated"
+        );
       }
-    });
- 
+
+      const senderSocketId =
+        onlineUsers.get(
+          String(senderId)
+        );
+
+      if (senderSocketId) {
+        const updatedMessages =
+          await Message.find({
+            sender: senderId,
+            receiver: receiverId,
+            status: "read",
+          }).populate(
+            "replyTo",
+            "text sender"
+          );
+
+        updatedMessages.forEach(
+          (message) => {
+            io.to(senderSocketId).emit(
+              "messageStatusUpdated",
+              message
+            );
+          }
+        );
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  }
+); 
     /* ================= TYPING ================= */
 
     socket.on("typing", ({ sender, receiver }) => {

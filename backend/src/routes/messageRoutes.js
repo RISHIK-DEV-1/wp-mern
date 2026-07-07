@@ -4,6 +4,7 @@ import {
   getMessages,
   markDelivered,
   markRead,
+  markConversationRead,
   getUnreadCounts,
   getChatPreviews,
   toggleReaction,
@@ -25,6 +26,10 @@ router.get("/:senderId/:receiverId", getMessages);
 router.put("/delivered/:messageId", markDelivered);
 
 router.put("/read/:messageId", markRead);
+router.put(
+  "/read-conversation",
+  markConversationRead
+);
 
 /* ================= REACTIONS ================= */
 router.post("/react/:messageId", toggleReaction);

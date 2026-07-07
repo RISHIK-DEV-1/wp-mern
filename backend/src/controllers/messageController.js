@@ -94,7 +94,34 @@ export const markRead = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+/* ================= MARK CONVERSATION READ ================= */
 
+export const markConversationRead = async (req, res) => {
+  try {
+    const { senderId, receiverId } = req.body;
+
+    await Message.updateMany(
+      {
+        sender: senderId,
+        receiver: receiverId,
+        status: { $ne: "read" },
+      },
+      {
+        $set: {
+          status: "read",
+        },
+      }
+    );
+
+    res.json({
+      success: true,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
 /* ================= GET UNREAD COUNTS ================= */
 
 export const getUnreadCounts = async (req, res) => {

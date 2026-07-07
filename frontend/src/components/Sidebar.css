@@ -73,11 +73,22 @@
 }
 
 .chat-info h4 {
-  margin-bottom: 4px;
+  margin: 0;
 
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+.chat-grid {
+  display: grid;
+
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+
+  column-gap: 8px;
+  row-gap: 4px;
+
+  align-items: start;
 }
 
 .sidebar-email {
@@ -117,8 +128,14 @@
 }
 
 .sidebar-status {
-  font-size: 12px;
+  margin: 0;
+
+  font-size: 13px;
   opacity: 0.7;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .typing {
@@ -131,13 +148,18 @@
   animation: dots 1.5s infinite;
 }
 
-.chat-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.chat-time {
+  color: #8696a0;
+  transition: 0.2s;
+}
+
+.chat-time.unread {
+  color: #25d366;
+  font-weight: 600;
 }
 
 .unread-count {
+  justify-self: end;
   min-width: 22px;
   height: 22px;
   border-radius: 50%;

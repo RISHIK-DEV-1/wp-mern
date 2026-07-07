@@ -135,19 +135,47 @@ const floatingDateTimer = useRef(null);
   }, [selectedUser, setMessages]);
 
   /* ================= MARK READ ================= */
+  /* ================= MARK CONVERSATION READ ================= */
 
-  useEffect(() => {
-    if (!selectedUser) return;
+useEffect(() => {
+  if (!selectedUser) return;
 
-    messages.forEach((message) => {
-      const isIncoming =
-        String(message.sender) === String(selectedUser._id);
+  const markConversationRead = async () => {
+    try {
+      await API.put(
+        "/messages/read-conversation",
+        {
+          senderId: selectedUser._id,
+          receiverId: user._id,
+        }
+      );
 
-      if (isIncoming && message.status !== "read") {
-        socket.emit("markRead", message._id);
-      }
-    });
-  }, [messages, selectedUser]);
+      setMessages((prev) =>
+        prev.map((msg) =>
+          String(msg.sender) ===
+          String(selectedUser._id)
+            ? {
+                ...msg,
+                status: "read",
+              }
+            : msg
+        )
+      );
+
+      socket.emit(
+        "conversationRead",
+        {
+          senderId: selectedUser._id,
+          receiverId: user._id,
+        }
+      );
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  markConversationRead();
+}, [selectedUser]);
 
   /* ================= AUTO SCROLL ================= */
    useEffect(() => {

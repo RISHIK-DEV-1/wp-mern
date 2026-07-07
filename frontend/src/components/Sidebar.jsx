@@ -334,56 +334,50 @@ export default function Sidebar({
               </div>
 
               <div className="chat-info">
-                <div className="chat-top">
-                  <h4>{u.name}</h4>
+                <div className="chat-grid">
+  <h4>{u.name}</h4>
 
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems:
-                        "center",
-                      gap: "8px",
-                    }}
-                  >
-                    <small>
-  {formatTime(chat.lastMessageTime)}
-</small>
+  <small
+    className={
+      unreadCounts[u._id] > 0
+        ? "chat-time unread"
+        : "chat-time"
+    }
+  >
+    {formatTime(chat.lastMessageTime)}
+  </small>
 
-                    {unreadCounts[u._id] >
-                      0 && (
-                      <span className="unread-count">
-                        {unreadCounts[u._id]}
-                      </span>
-                    )}
-                  </div>
-                </div>
+  <p
+    className={`sidebar-status ${
+      isTyping ? "typing" : ""
+    }`}
+  >
+    {isTyping ? (
+      "typing..."
+    ) : chat.lastMessage ===
+        "This message was deleted" ||
+      chat.lastMessage ===
+        "You deleted this message" ? (
+      <>
+        <MdBlock className="sidebar-deleted-icon" />
+        {chat.lastMessage}
+      </>
+    ) : String(chat.lastSender) ===
+      String(user._id) ? (
+      `You: ${chat.lastMessage}`
+    ) : (
+      chat.lastMessage
+    )}
+  </p>
 
-                <p
-  className={`sidebar-status ${
-    isTyping
-      ? "typing"
-      : ""
-  }`}
->
-  {isTyping ? (
-    "typing..."
-  ) : chat.lastMessage ===
-      "This message was deleted" ||
-    chat.lastMessage ===
-      "You deleted this message" ? (
-    <>
-      <MdBlock
-        className="sidebar-deleted-icon"
-      />
-      {chat.lastMessage}
-    </>
-  ) : String(chat.lastSender) ===
-    String(user._id) ? (
-    `You: ${chat.lastMessage}`
+  {unreadCounts[u._id] > 0 ? (
+    <span className="unread-count">
+      {unreadCounts[u._id]}
+    </span>
   ) : (
-    chat.lastMessage
+    <span></span>
   )}
-</p>
+</div>
               </div>
             </div>
           );

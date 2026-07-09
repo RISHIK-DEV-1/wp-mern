@@ -708,6 +708,20 @@
   opacity: 1;
   transform: translateY(0);
 }
+.unread-separator {
+  display: flex;
+  justify-content: center;
+  margin: 12px 0;
+}
+
+.unread-separator span {
+  background: #202c33;   /* Same as date separator */
+  color: #d1d7db;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+}
 /* =========================
    MOBILE
 ========================= */

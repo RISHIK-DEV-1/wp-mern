@@ -35,8 +35,14 @@ export const getMessages = async (req, res) => {
 
     const messages = await Message.find({
       $or: [
-        { sender: senderId, receiver: receiverId },
-        { sender: receiverId, receiver: senderId },
+        {
+          sender: senderId,
+          receiver: receiverId,
+        },
+        {
+          sender: receiverId,
+          receiver: senderId,
+        },
       ],
       deletedFor: {
         $ne: senderId,
@@ -45,9 +51,31 @@ export const getMessages = async (req, res) => {
       .populate("replyTo", "text sender")
       .sort({ createdAt: 1 });
 
-    res.json(messages);
+    // First unread message sent by the other user
+    const firstUnread = messages.find(
+      (msg) =>
+        String(msg.sender) ===
+          String(receiverId) &&
+        msg.status !== "read"
+    );
+
+    const unreadCount = messages.filter(
+      (msg) =>
+        String(msg.sender) ===
+          String(receiverId) &&
+        msg.status !== "read"
+    ).length;
+
+    res.json({
+      messages,
+      unreadCount,
+      firstUnreadMessageId:
+        firstUnread?._id || null,
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      message: error.message,
+    });
   }
 };
 

@@ -50,7 +50,13 @@ const [showFloatingDate, setShowFloatingDate] =
 
 const floatingDateTimer = useRef(null);
   const messageRefs = useRef({});
+  const [unreadCount, setUnreadCount] =
+  useState(0);
 
+const [firstUnreadMessageId, setFirstUnreadMessageId] =
+  useState(null);
+
+const unreadDividerRef = useRef(null);
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
   const touchEndX = useRef(0);
@@ -82,10 +88,16 @@ const floatingDateTimer = useRef(null);
 
     try {
       const { data } = await API.get(
-        `/messages/${user._id}/${selectedUser._id}`
-      );
+  `/messages/${user._id}/${selectedUser._id}`
+);
 
-      setMessages(data);
+setMessages(data.messages);
+
+setUnreadCount(data.unreadCount);
+
+setFirstUnreadMessageId(
+  data.firstUnreadMessageId
+);
     } catch (error) {
       console.error("Failed to fetch messages:", error.message);
     }
@@ -134,7 +146,6 @@ const floatingDateTimer = useRef(null);
     };
   }, [selectedUser, setMessages]);
 
-  /* ================= MARK READ ================= */
   /* ================= MARK CONVERSATION READ ================= */
 
 useEffect(() => {
@@ -216,7 +227,7 @@ useEffect(() => {
     const containerRect =
       container.getBoundingClientRect();
 
-    if (rect.bottom > containerRect.top + 8) {
+    if (rect.top >= containerRect.top - 5) {
       setFloatingDate(
         separator.dataset.date
       );
@@ -247,18 +258,54 @@ useEffect(() => {
 
   // Initial chat opening
   if (
-    isInitialLoad.current &&
-    messages.length > 0
+  isInitialLoad.current &&
+  messages.length > 0
+) {
+  isInitialLoad.current = false;
+
+  requestAnimationFrame(() => {
+
+    if (
+  unreadCount > 0 &&
+  firstUnreadMessageId
+) {
+  const firstUnreadIndex =
+    messages.findIndex(
+      (m) =>
+        m._id ===
+        firstUnreadMessageId
+    );
+
+  const targetIndex =
+    Math.max(
+      firstUnreadIndex - 3,
+      0
+    );
+
+  const targetMessage =
+    messages[targetIndex];
+
+  if (
+    targetMessage &&
+    messageRefs.current[
+      targetMessage._id
+    ]
   ) {
-    isInitialLoad.current = false;
-
-    requestAnimationFrame(() => {
-      container.scrollTop =
-        container.scrollHeight;
+    messageRefs.current[
+      targetMessage._id
+    ].scrollIntoView({
+      block: "start",
     });
-
-    return;
   }
+} else {
+  container.scrollTop =
+    container.scrollHeight;
+}
+
+  });
+
+  return;
+}
 
   // Only auto jump if already near bottom
   const distanceFromBottom =
@@ -501,7 +548,11 @@ if (
       {messages.map((message, index) => {
   const previousMessage =
     messages[index - 1];
-
+  
+  const showUnreadDivider =
+  unreadCount > 0 &&
+  message._id ===
+    firstUnreadMessageId;
   const showDateSeparator =
     !previousMessage ||
     new Date(
@@ -510,12 +561,25 @@ if (
       new Date(
         message.createdAt
       ).toDateString();
+  
 
   return (
     <React.Fragment
       key={message._id}
     >
-  {showDateSeparator && (
+{showUnreadDivider && (
+  <div
+    ref={unreadDividerRef}
+    className="unread-separator"
+  >
+    <span>
+      {unreadCount} unread message
+      {unreadCount > 1 ? "s" : ""}
+    </span>
+  </div>
+)}
+
+{showDateSeparator && (
   <div
   className="date-separator"
   data-date={getDateLabel(

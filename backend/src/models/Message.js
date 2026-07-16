@@ -71,6 +71,12 @@ forwardCount: {
   type: Number,
   default: 0,
 },
+starredBy: [
+  {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+  },
+],
 },
   {
     timestamps: true,

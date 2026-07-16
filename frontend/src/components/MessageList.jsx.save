@@ -735,22 +735,19 @@ if (
           {/* TIME */}
           <span className="message-time">
   {message.starredBy?.includes(user._id) && (
-    <span className="star-wrapper">
-      <MdStar className="starred-icon" />
-
-      {animatedStarIds?.includes(message._id) && (
-        <MdStar className="star-fly" />
-      )}
-    </span>
+    <MdStar className="starred-icon" />
   )}
 
-  {new Date(message.createdAt).toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-  })}
 
-  {getStatusIcon(message)}
-</span>
+            {new Date(message.createdAt).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+            {getStatusIcon(message)}
+          </span>
+       {animatedStarIds?.includes(message._id) && (
+  <MdStar className="star-fly" />
+)}
           {/* QUICK REACTION BAR */}
 {selectedMessageId === message._id &&
  !message.deletedForEveryone && (

@@ -269,6 +269,78 @@ export const toggleReaction = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+/* ================= TOGGLE STAR ================= */
+
+export const toggleStar = async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const { userId } = req.body;
+
+    const message = await Message.findById(messageId);
+
+    if (!message) {
+      return res
+        .status(404)
+        .json({ message: "Message not found" });
+    }
+
+    const alreadyStarred =
+      message.starredBy.some(
+        (id) => String(id) === String(userId)
+      );
+
+    if (alreadyStarred) {
+      message.starredBy =
+        message.starredBy.filter(
+          (id) =>
+            String(id) !== String(userId)
+        );
+    } else {
+      message.starredBy.push(userId);
+    }
+
+    await message.save();
+
+    const updatedMessage =
+      await Message.findById(messageId)
+        .populate("replyTo", "text sender");
+
+    res.json(updatedMessage);
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
+/* ================= GET STARRED MESSAGES ================= */
+
+export const getStarredMessages = async (
+  req,
+  res
+) => {
+  try {
+    const { userId } = req.params;
+
+    const messages =
+      await Message.find({
+        starredBy: userId,
+      })
+        .populate("sender", "name avatar")
+        .populate("receiver", "name avatar")
+        .populate("replyTo", "text sender")
+        .sort({
+          createdAt: -1,
+        });
+
+    res.json(messages);
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
 /* ================= DELETE FOR ME ================= */
 
 export const deleteForMe = async (req, res) => {

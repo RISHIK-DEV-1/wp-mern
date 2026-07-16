@@ -237,6 +237,48 @@
 
   gap: 1px;
 }
+.star-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.starred-icon {
+  font-size: 12px;
+  color: inherit;
+  margin-right: 2px;
+  position: relative;
+  top: 1px;
+}
+
+.star-fly {
+  position: absolute;
+
+ 
+  bottom: 10px;
+
+  font-size: 12px;
+  color: inherit;
+
+  pointer-events: none;
+  z-index: 50;
+
+  will-change: transform, opacity;
+
+  animation: starFly 1s linear forwards;
+}
+
+@keyframes starFly {
+  from {
+    opacity: 1;
+    transform: translate3d(0,0,0) scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: translate3d(0,-100px,0) scale(4);
+  }
+}
 .message.received .message-time {
   float: right;
 
@@ -633,50 +675,7 @@
 .scroll-bottom-btn:active {
   transform: scale(0.95);
 }
-/*.floating-date-pill {
-  position: sticky;
 
-  top: 0px;
-
-  width: fit-content;
-
-  margin: 0 auto;
-
-  padding: 6px 14px;
-
-  background: #182229;
-
-  color: #d1d7db;
-
-  border-radius: 5px;
-
-  font-size: 12px;
-
-  z-index: 100;
-
-  pointer-events: none;
-
-  animation: floatingDateFade .18s ease;
-}
-
-@keyframes floatingDateFade {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-.floating-date-pill {
-  visibility: hidden;
-}
-
-.floating-date-pill.show {
-  visibility: visible;
-}*/
 .floating-date-pill {
   position: sticky;
   top: 0;

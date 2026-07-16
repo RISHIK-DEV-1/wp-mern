@@ -1,6 +1,6 @@
 import React from "react";
 import "./ChatHeader.css";
-import { MdDelete } from "react-icons/md";
+import { MdDelete,MdOutlineStarBorder,MdStar, } from "react-icons/md";
 import { LuForward } from "react-icons/lu";
 export default function ChatHeader({
   selectedUser,
@@ -12,6 +12,8 @@ export default function ChatHeader({
   setSelectedMessages,
   setShowDeletePopup,
   openForwardScreen,
+  handleToggleStar,
+  starIconFilled,
 }) {
   const isOnline = onlineUsers.includes(
     String(selectedUser?._id)
@@ -60,6 +62,16 @@ export default function ChatHeader({
     </div>
 
     <div className="header-actions">
+  <button
+  className="header-action-btn"
+  onClick={handleToggleStar}
+>
+  {starIconFilled ? (
+    <MdStar />
+  ) : (
+    <MdOutlineStarBorder />
+  )}
+</button>
 
   {/* DELETE FIRST (IMPORTANT) */}
   <button

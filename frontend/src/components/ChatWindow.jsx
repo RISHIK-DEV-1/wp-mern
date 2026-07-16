@@ -27,10 +27,19 @@ export default function ChatWindow({
   const [replyMessage, setReplyMessage] = useState(null);
   const [showDeletePopup, setShowDeletePopup] =
   useState(false);
-
+  const [animatedStarIds, setAnimatedStarIds] =
+  useState([]);
   const selectedMessageObjects =
   messages.filter((m) =>
     selectedMessages.includes(m._id)
+  );
+ 
+  const starIconFilled =
+  selectedMessageObjects.length > 0 &&
+  selectedMessageObjects.every((message) =>
+    message.starredBy?.some(
+      (id) => String(id) === String(user._id)
+    )
   );
 
   const openForwardScreen = () => {
@@ -145,6 +154,53 @@ const canDeleteForEveryone =
       console.error(error);
     }
   };
+
+/* ================= STAR ================= */
+
+const handleToggleStar = async () => {
+  const ids = [...selectedMessages];
+
+  // Exit selection mode immediately
+  setSelectedMessages([]);
+
+  try {
+    const responses = await Promise.all(
+      ids.map((id) =>
+        API.post(`/messages/star/${id}`, {
+          userId: user._id,
+        })
+      )
+    );
+
+    const updatedMessages = responses.map(
+      (r) => r.data
+    );
+
+    setMessages((prev) =>
+      prev.map((msg) => {
+        const updated = updatedMessages.find(
+          (m) => m._id === msg._id
+        );
+
+        return updated || msg;
+      })
+    );
+   // Animate only newly starred messages
+const newlyStarred = updatedMessages
+  .filter((msg) =>
+    msg.starredBy?.includes(user._id)
+  )
+  .map((msg) => msg._id);
+
+setAnimatedStarIds(newlyStarred);
+
+setTimeout(() => {
+  setAnimatedStarIds([]);
+}, 3000);
+  } catch (error) {
+    console.error(error);
+  }
+};
   /* ================= SOCKET: GLOBAL MESSAGE SYNC ================= */
 
   useEffect(() => {
@@ -232,6 +288,8 @@ const canDeleteForEveryone =
             setSelectedMessages={setSelectedMessages}
             setShowDeletePopup={setShowDeletePopup}
             openForwardScreen={openForwardScreen}
+            handleToggleStar={handleToggleStar}
+            starIconFilled={starIconFilled}
           />
 
           <MessageList
@@ -241,6 +299,7 @@ const canDeleteForEveryone =
             setReplyMessage={setReplyMessage}
             selectedMessages={selectedMessages}
             setSelectedMessages={setSelectedMessages}
+            animatedStarIds={animatedStarIds}
           />
 
           <MessageInput

@@ -8,6 +8,8 @@ import {
   getUnreadCounts,
   getChatPreviews,
   toggleReaction,
+  toggleStar,
+  getStarredMessages,
   deleteForMe,
   deleteForEveryone,
   forwardMessages,
@@ -33,6 +35,9 @@ router.put(
 
 /* ================= REACTIONS ================= */
 router.post("/react/:messageId", toggleReaction);
+router.post("/star/:messageId", toggleStar);
+
+router.get("/starred/:userId", getStarredMessages);
 router.post(
   "/delete-for-me/:messageId",
   deleteForMe

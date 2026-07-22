@@ -15,6 +15,7 @@ import ResetPassword from "./pages/ResetPassword";
 import ProfilePage from "./pages/ProfilePage";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import ForwardScreen from "./pages/ForwardScreen";
+import Starred from "./pages/Starred";
 import "./index.css";
 
 export default function App() {
@@ -62,6 +63,14 @@ export default function App() {
         <Route
   path="/profile"
   element={<ProfilePage />}
+/> 
+        <Route
+  path="/starred"
+  element={
+    <ProtectedRoute>
+      <Starred />
+    </ProtectedRoute>
+  }
 />
         <Route path="/forward" element={<ForwardScreen />} />
       </Routes>

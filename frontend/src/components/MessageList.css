@@ -7,9 +7,8 @@
   min-height: 0;
 
   overflow-y: auto;
-
   padding: 12px;
-
+  align-items: stretch;
   display: flex;
   flex-direction: column;
 
@@ -69,15 +68,18 @@
 .message-row {
   transition: background 0.2s ease;
   display: flex;
+  width: 100%;
   position: relative;
   margin: 2px 0;
 }
 
 .sent-row {
+  width: 100%;
   justify-content: flex-end;
 }
 
 .received-row {
+  width: 100%;
   justify-content: flex-start;
 }
 .message-content {
@@ -308,7 +310,7 @@
    HIGHLIGHT TARGET MESSAGE
 ========================= */
 
-.highlight-message {
+/*.highlight-message {
   animation:
     whatsappHighlight
     2s ease;
@@ -350,6 +352,29 @@
       ) inset;
 
     transform: scale(1);
+  }
+}*/
+.message-row {
+  position: relative;
+}
+
+.message-row.highlight-message::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: #25d366;
+  opacity: 0.22;
+  pointer-events: none;
+  animation: whatsappHighlight 1800ms linear forwards;
+}
+
+@keyframes whatsappHighlight {
+  from {
+    opacity: 0.22;
+  }
+
+  to {
+    opacity: 0;
   }
 }
 

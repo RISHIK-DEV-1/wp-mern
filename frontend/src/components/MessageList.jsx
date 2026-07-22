@@ -1,3 +1,4 @@
+import { useLocation, useNavigate } from "react-router-dom";
 import React, {
   useEffect,
   useContext,
@@ -32,9 +33,13 @@ export default function MessageList({
   selectedMessages,
   setSelectedMessages,
   animatedStarIds,
+  jumpToMessageId,
 }) {
   const { user } = useContext(AuthContext);
+  const navigate = useNavigate();
+const location = useLocation();
 
+const hasJumped = useRef(false);
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
 
@@ -252,16 +257,23 @@ useEffect(() => {
 }, [selectedUser]);
 
    useEffect(() => {
-  const container =
-    messagesContainerRef.current;
+  const container = messagesContainerRef.current;
 
   if (!container) return;
 
-  // Initial chat opening
+  // Don't auto-scroll if we're jumping from Starred
   if (
-  isInitialLoad.current &&
-  messages.length > 0
-) {
+    jumpToMessageId &&
+    isInitialLoad.current
+  ) {
+    isInitialLoad.current = false;
+    return;
+  }
+
+  if (
+    isInitialLoad.current &&
+    messages.length > 0
+  ) {
   isInitialLoad.current = false;
 
   requestAnimationFrame(() => {
@@ -319,6 +331,39 @@ useEffect(() => {
       container.scrollHeight;
   }
 }, [messages]);
+
+useEffect(() => {
+  if (!jumpToMessageId) return;
+
+  const tryJump = () => {
+    const row =
+      messageRefs.current[jumpToMessageId]
+        ?.closest(".message-row");
+
+    if (!row) {
+      requestAnimationFrame(tryJump);
+      return;
+    }
+
+    row.scrollIntoView({
+      block: "center",
+      behavior: "auto",
+    });
+
+    row.classList.add("highlight-message");
+
+    setTimeout(() => {
+      row.classList.remove("highlight-message");
+
+      navigate(location.pathname, {
+        replace: true,
+        state: {},
+      });
+    }, 2000);
+  };
+
+  tryJump();
+}, [jumpToMessageId, messages]);
   /*===== EMOJI PICKER LOCK SCROLL ====== */
   useEffect(() => {
   if (pickerTarget) {
@@ -385,25 +430,24 @@ useEffect(() => {
     return;
   }
 
-  const element =
-    messageRefs.current[messageId];
+  const bubble = messageRefs.current[messageId];
 
-  if (!element) return;
+if (!bubble) return;
 
-  element.scrollIntoView({
-    behavior: "smooth",
-    block: "center",
-  });
+const row = bubble.closest(".message-row");
 
-  element.classList.add(
-    "highlight-message"
-  );
+if (!row) return;
 
-  setTimeout(() => {
-    element.classList.remove(
-      "highlight-message"
-    );
-  }, 2000);
+row.scrollIntoView({
+  behavior: "auto",
+  block: "center",
+});
+
+row.classList.add("highlight-message");
+
+setTimeout(() => {
+  row.classList.remove("highlight-message");
+}, 2000);
 };
 
   /* ================= REACTIONS ================= */

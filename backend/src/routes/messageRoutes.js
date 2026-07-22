@@ -23,33 +23,24 @@ router.get("/unread/:userId", getUnreadCounts);
 
 router.get("/chats/:userId", getChatPreviews);
 
-router.get("/:senderId/:receiverId", getMessages);
+router.get("/starred/:userId", getStarredMessages);
 
 router.put("/delivered/:messageId", markDelivered);
 
 router.put("/read/:messageId", markRead);
-router.put(
-  "/read-conversation",
-  markConversationRead
-);
 
-/* ================= REACTIONS ================= */
+router.put("/read-conversation", markConversationRead);
+
 router.post("/react/:messageId", toggleReaction);
+
 router.post("/star/:messageId", toggleStar);
 
-router.get("/starred/:userId", getStarredMessages);
-router.post(
-  "/delete-for-me/:messageId",
-  deleteForMe
-);
+router.post("/delete-for-me/:messageId", deleteForMe);
 
-router.post(
-  "/delete-for-everyone/:messageId",
-  deleteForEveryone
-);
+router.post("/delete-for-everyone/:messageId", deleteForEveryone);
 
-router.post(
-  "/forward",
-  forwardMessages
-);
+router.post("/forward", forwardMessages);
+
+/* Keep generic routes LAST */
+router.get("/:senderId/:receiverId", getMessages);
 export default router;

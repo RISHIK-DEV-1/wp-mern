@@ -236,7 +236,14 @@ export default function Sidebar({
           >
             Profile
           </button>
-
+          <button
+  onClick={() => {
+    setShowMenu(false);
+    navigate("/starred");
+  }}
+>
+  Starred messages
+</button>
           <button
   onClick={() => {
     socket.disconnect();

@@ -247,6 +247,7 @@ useEffect(() => {
             onlineUsers={
               onlineUsers
             }
+           jumpToMessageId={location.state?.jumpToMessageId}
           />
         ) : (
           <Sidebar
@@ -306,6 +307,7 @@ useEffect(() => {
         onlineUsers={
           onlineUsers
         }
+        jumpToMessageId={location.state?.jumpToMessageId}
       />
         </div>
 

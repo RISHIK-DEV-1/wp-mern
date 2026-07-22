@@ -18,6 +18,7 @@ export default function ChatWindow({
   setSelectedUser,
   typingUser,
   onlineUsers,
+  jumpToMessageId,
 }) {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -300,6 +301,7 @@ setTimeout(() => {
             selectedMessages={selectedMessages}
             setSelectedMessages={setSelectedMessages}
             animatedStarIds={animatedStarIds}
+            jumpToMessageId={jumpToMessageId}
           />
 
           <MessageInput

@@ -1,0 +1,155 @@
+.starred-screen {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #0b141a;
+  color: white;
+}
+
+.starred-header {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 16px;
+  background: #202c33;
+  border-bottom: 1px solid #2f3b43;
+  flex-shrink: 0;
+}
+
+.starred-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.starred-header.selection {
+  justify-content: space-between;
+}
+
+.starred-header.selection span {
+  flex: 1;
+  margin-left: 12px;
+  font-size: 18px;
+}
+
+.starred-back {
+  border: none;
+  background: transparent;
+  color: white;
+  cursor: pointer;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+}
+
+.selection-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.selection-actions button {
+  border: none;
+  background: transparent;
+  color: white;
+  cursor: pointer;
+  font-size: 22px;
+}
+
+.starred-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+}
+
+.starred-item {
+  margin-bottom: 22px;
+}
+
+.starred-conversation {
+  display: flex;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.starred-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #54656f;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  flex-shrink: 0;
+  font-weight: 600;
+}
+
+.starred-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.starred-info {
+  flex: 1;
+  overflow: hidden;
+}
+
+.starred-users {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.starred-users .arrow {
+  color: #8c9aa5;
+}
+
+.starred-conversation small {
+  color: #8c9aa5;
+  font-size: 12px;
+  margin-left: 10px;
+  white-space: nowrap;
+}
+
+.forwarded-label {
+  font-size: 11px;
+  color: #8c9aa5;
+  margin-bottom: 4px;
+  font-style: italic;
+}
+
+.starred-loading,
+.starred-empty {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #8c9aa5;
+  font-size: 16px;
+}
+
+/* Give each bubble breathing room */
+.starred-item .message-row {
+  margin-bottom: 0;
+}
+
+/* Reuse your selected highlight */
+.starred-item .message-row {
+  position: relative;
+}
+
+.starred-item .pressed-highlight {
+  background: rgba(37, 211, 102, 0.22);
+}
+
+.starred-item .message-row-active {
+  background: rgba(37, 211, 102, 0.12);
+}

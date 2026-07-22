@@ -2,6 +2,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import React, {
   useEffect,
   useContext,
+  useLayoutEffect,
   useRef,
   useState,
 } from "react";
@@ -256,7 +257,7 @@ useEffect(() => {
 };
 }, [selectedUser]);
 
-   useEffect(() => {
+   useLayoutEffect(() => {
   const container = messagesContainerRef.current;
 
   if (!container) return;

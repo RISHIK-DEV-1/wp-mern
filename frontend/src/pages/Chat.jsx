@@ -3,6 +3,7 @@ import React, {
   useState,
   useEffect,
   useContext,
+  useRef,
 } from "react";
 
 import Sidebar from "../components/Sidebar";
@@ -18,6 +19,7 @@ export default function Chat() {
   const { user } =
     useContext(AuthContext);
   const location = useLocation();
+  
   const [selectedUser, setSelectedUser] =
     useState(null);
 
@@ -33,6 +35,7 @@ export default function Chat() {
     useState([]);
   const [showSendingToast, setShowSendingToast] =
   useState(false);
+  const historyPushed = useRef(false);
   /* ================= RESTORE OPEN CHAT ================= */
 
   useEffect(() => {
@@ -68,7 +71,7 @@ export default function Chat() {
 
   return () => clearTimeout(timer);
 }, []);
-
+  
   /* ================= SAVE OPEN CHAT ================= */
 
   useEffect(() => {
@@ -89,25 +92,31 @@ export default function Chat() {
 useEffect(() => {
   if (!isMobile) return;
 
-  if (selectedUser) {
+  if (selectedUser && !historyPushed.current) {
     window.history.pushState(
       { chatOpen: true },
       ""
     );
+
+    historyPushed.current = true;
+  }
+
+  if (!selectedUser) {
+    historyPushed.current = false;
   }
 }, [selectedUser, isMobile]);
   /* ================= MOBILE BACK BUTTON ================= */
 
 useEffect(() => {
   const handlePopState = () => {
-    if (isMobile && selectedUser) {
-      setSelectedUser(null);
+  if (isMobile && selectedUser) {
+    setSelectedUser(null);
 
-      localStorage.removeItem(
-        "selectedChat"
-      );
-    }
-  };
+    localStorage.removeItem("selectedChat");
+
+    historyPushed.current = false;
+  }
+};
 
   window.addEventListener(
     "popstate",

@@ -34,7 +34,7 @@ export default function ChatWindow({
   messages.filter((m) =>
     selectedMessages.includes(m._id)
   );
- 
+
   const starIconFilled =
   selectedMessageObjects.length > 0 &&
   selectedMessageObjects.every((message) =>

@@ -49,7 +49,6 @@ export default function ChatHeader({
     "selectedChat"
   );
 
-  window.history.back();
 }}
 >
   ←

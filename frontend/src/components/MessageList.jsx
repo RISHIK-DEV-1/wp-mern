@@ -346,20 +346,20 @@ useEffect(() => {
     }
 
     row.scrollIntoView({
-      block: "center",
-      behavior: "auto",
-    });
+  block: "center",
+  behavior: "auto",
+});
 
-    row.classList.add("highlight-message");
+row.classList.add("highlight-message");
 
-    setTimeout(() => {
-      row.classList.remove("highlight-message");
+setTimeout(() => {
+  row.classList.remove("highlight-message");
 
-      navigate(location.pathname, {
-        replace: true,
-        state: {},
-      });
-    }, 2000);
+  navigate(location.pathname, {
+    replace: true,
+    state: {},
+  });
+}, 2000);
   };
 
   tryJump();
@@ -593,7 +593,7 @@ if (
       {messages.map((message, index) => {
   const previousMessage =
     messages[index - 1];
-  
+
   const showUnreadDivider =
   unreadCount > 0 &&
   message._id ===
@@ -606,7 +606,7 @@ if (
       new Date(
         message.createdAt
       ).toDateString();
-  
+
 
   return (
     <React.Fragment

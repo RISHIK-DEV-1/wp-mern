@@ -89,13 +89,26 @@
 }
 
 .message-row-active {
-    background: rgba(
-    37,
-    211,
-    102,
-    0.12
-  );
- /* border-radius: 8px;*/
+  position: relative;
+}
+
+.message-row-active::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -12px;
+  right: -12px;
+  background: rgba(37, 211, 102, 0.12);
+  pointer-events: none;
+  z-index: 0;
+}
+
+@media (max-width: 700px) {
+  .message-row-active::after {
+    left: -10px;
+    right: -10px;
+  }
 }
 /* =========================
    REPLY BUTTON (DESKTOP)
@@ -256,7 +269,7 @@
 .star-fly {
   position: absolute;
 
- 
+
   bottom: 10px;
 
   font-size: 12px;
@@ -361,7 +374,10 @@
 .message-row.highlight-message::after {
   content: "";
   position: absolute;
-  inset: 0;
+  top: 0;
+  bottom: 0;
+  left: -12px;   /* cancel the .messages padding */
+  right: -12px;  /* cancel the .messages padding */
   background: #25d366;
   opacity: 0.22;
   pointer-events: none;
@@ -766,6 +782,10 @@
   .reaction-bar {
     top: -56px;
   }
+    .message-row.highlight-message::after {
+    left: -10px;
+    right: -10px;
+  }
 }
 
 /* =========================
@@ -787,4 +807,3 @@
     font-size: 20px;
   }
 }
-

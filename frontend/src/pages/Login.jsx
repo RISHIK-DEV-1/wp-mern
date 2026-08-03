@@ -72,7 +72,7 @@ export default function Login() {
 
       loginUser(data);
 
-      navigate("/chat");
+      navigate("/chat", { replace: true });
     } catch (error) {
       setError(
         error.response?.data
@@ -100,7 +100,7 @@ export default function Login() {
 
         loginUser(data);
 
-        navigate("/chat");
+        navigate("/chat", { replace: true });
       } catch (error) {
         setError(
           error.response?.data

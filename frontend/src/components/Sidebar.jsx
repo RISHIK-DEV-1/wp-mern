@@ -248,7 +248,7 @@ export default function Sidebar({
   onClick={() => {
     socket.disconnect();
     logoutUser();
-    navigate("/login");
+    window.location.replace("/login");
   }}
 >
   Logout

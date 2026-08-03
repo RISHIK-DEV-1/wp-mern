@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useContext } from "react";
 
 import {
   BrowserRouter,
   Routes,
   Route,
+  Navigate,
 } from "react-router-dom";
 
 import Login from "./pages/Login";
@@ -16,15 +17,38 @@ import ProfilePage from "./pages/ProfilePage";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import ForwardScreen from "./pages/ForwardScreen";
 import Starred from "./pages/Starred";
+
+import { AuthContext } from "./context/AuthContext";
+
 import "./index.css";
 
 export default function App() {
+  const { user, loading } =
+    useContext(AuthContext);
+
+  if (loading) {
+    return null;
+  }
+
   return (
     <BrowserRouter>
       <Routes>
+        {/* Smart Home Route */}
         <Route
           path="/"
-          element={<Login />}
+          element={
+            user ? (
+              <Navigate
+                to="/chat"
+                replace
+              />
+            ) : (
+              <Navigate
+                to="/login"
+                replace
+              />
+            )
+          }
         />
 
         <Route
@@ -60,19 +84,44 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+
         <Route
-  path="/profile"
-  element={<ProfilePage />}
-/> 
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+
         <Route
-  path="/starred"
-  element={
-    <ProtectedRoute>
-      <Starred />
-    </ProtectedRoute>
-  }
-/>
-        <Route path="/forward" element={<ForwardScreen />} />
+          path="/starred"
+          element={
+            <ProtectedRoute>
+              <Starred />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/forward"
+          element={
+            <ProtectedRoute>
+              <ForwardScreen />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Unknown Routes */}
+        <Route
+          path="*"
+          element={
+            <Navigate
+              to="/"
+              replace
+            />
+          }
+        />
       </Routes>
     </BrowserRouter>
   );

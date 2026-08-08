@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
-
+import PendingUser from "../models/PendingUser.js";
 import User from "../models/User.js";
 
 /* ================= PASSWORD VALIDATION ================= */
@@ -21,14 +21,26 @@ export const forgotPassword = async (
     const { email } = req.body;
 
     const user = await User.findOne({
+  email,
+});
+
+if (!user) {
+  const pendingUser =
+    await PendingUser.findOne({
       email,
     });
 
-    if (!user) {
-      return res.status(404).json({
-        message: "User not found",
-      });
-    }
+  if (pendingUser) {
+    return res.status(400).json({
+      message:
+        "Please verify your email first.",
+    });
+  }
+
+  return res.status(404).json({
+    message: "User not found",
+  });
+}
 
     const resetToken =
       crypto.randomBytes(32).toString(

@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { OAuth2Client } from "google-auth-library";
-
+import PendingUser from "../models/PendingUser.js";
 import User from "../models/User.js";
 import generateToken from "../utils/generateToken.js";
 import sendEmail from "../utils/sendEmail.js";
@@ -35,35 +35,35 @@ export const registerUser = async (req, res) => {
       });
     }
 
-    const userExists = await User.findOne({
+    // Already verified?
+    const verifiedUser = await User.findOne({
       email,
     });
 
-    if (userExists) {
+    if (verifiedUser) {
       return res.status(400).json({
         message: "User already exists",
       });
     }
 
+    // Remove old pending registration if any
+    await PendingUser.deleteOne({
+      email,
+    });
+
     const salt = await bcrypt.genSalt(10);
 
-    const hashedPassword = await bcrypt.hash(
-      password,
-      salt
-    );
+    const hashedPassword =
+      await bcrypt.hash(password, salt);
 
     const verificationToken =
       crypto.randomBytes(32).toString("hex");
 
-    await User.create({
+    await PendingUser.create({
       name,
       email,
       password: hashedPassword,
-
-      isVerified: false,
-
       verificationToken,
-
       verificationExpires:
         Date.now() + 1000 * 60 * 60,
     });
@@ -74,7 +74,6 @@ export const registerUser = async (req, res) => {
     await sendEmail({
       to: email,
       subject: "Verify Your Email",
-
       html: `
         <h2>Welcome to WP MERN Chat</h2>
 
@@ -112,31 +111,49 @@ export const verifyEmail = async (req, res) => {
   try {
     const { token } = req.params;
 
-    const user = await User.findOne({
+    const pendingUser = await PendingUser.findOne({
       verificationToken: token,
-
       verificationExpires: {
         $gt: Date.now(),
       },
     });
 
-    if (!user) {
+    if (!pendingUser) {
       return res.status(400).json({
-        message:
-          "Invalid or expired verification link",
+        message: "Invalid or expired verification link",
       });
     }
 
-    user.isVerified = true;
+    // Safety check
+    const existingUser = await User.findOne({
+      email: pendingUser.email,
+    });
 
-    user.verificationToken = null;
-    user.verificationExpires = null;
+    if (existingUser) {
+      await PendingUser.deleteOne({
+        _id: pendingUser._id,
+      });
 
-    await user.save();
+      return res.json({
+        message: "Email already verified",
+      });
+    }
+
+    await User.create({
+      name: pendingUser.name,
+      email: pendingUser.email,
+      password: pendingUser.password,
+      avatar: "",
+      isVerified: true,
+      lastSeen: new Date(),
+    });
+
+    await PendingUser.deleteOne({
+      _id: pendingUser._id,
+    });
 
     res.json({
-      message:
-        "Email verified successfully",
+      message: "Email verified successfully",
     });
   } catch (error) {
     res.status(500).json({
@@ -152,7 +169,7 @@ export const resendVerificationEmail =
     try {
       const { email } = req.body;
 
-      const user = await User.findOne({
+      const user = await PendingUser.findOne({
         email,
       });
 
@@ -162,12 +179,6 @@ export const resendVerificationEmail =
         });
       }
 
-      if (user.isVerified) {
-        return res.status(400).json({
-          message:
-            "Email already verified",
-        });
-      }
 
       const verificationToken =
         crypto.randomBytes(32).toString("hex");
@@ -229,15 +240,26 @@ export const loginUser = async (
       req.body;
 
     const user = await User.findOne({
+  email,
+});
+
+if (!user) {
+  const pendingUser =
+    await PendingUser.findOne({
       email,
     });
 
-    if (!user) {
-      return res.status(401).json({
-        message:
-          "Invalid credentials",
-      });
-    }
+  if (pendingUser) {
+    return res.status(401).json({
+      message:
+        "Please verify your email before logging in.",
+    });
+  }
+
+  return res.status(401).json({
+    message: "Invalid credentials",
+  });
+}
 
     const isMatch =
       await bcrypt.compare(
@@ -308,14 +330,42 @@ export const googleLogin = async (
       });
 
     if (!user) {
-      user = await User.create({
-        name,
-        email,
-        googleId: sub,
-        avatar: picture || "",
-        isVerified: true,
-      });
-    } else {
+
+  const pendingUser =
+    await PendingUser.findOne({
+      email,
+    });
+
+  if (pendingUser) {
+
+    user = await User.create({
+      name: pendingUser.name,
+      email: pendingUser.email,
+      password: pendingUser.password,
+      googleId: sub,
+      avatar: picture || "",
+      isVerified: true,
+      lastSeen: new Date(),
+    });
+
+    await PendingUser.deleteOne({
+      _id: pendingUser._id,
+    });
+
+  } else {
+
+    user = await User.create({
+      name,
+      email,
+      googleId: sub,
+      avatar: picture || "",
+      isVerified: true,
+      lastSeen: new Date(),
+    });
+
+  }
+
+} else {
       let updated = false;
 
       /* Link Google account */

@@ -17,7 +17,7 @@ import ProfilePage from "./pages/ProfilePage";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import ForwardScreen from "./pages/ForwardScreen";
 import Starred from "./pages/Starred";
-
+import NewContact from "./pages/NewContact";
 import { AuthContext } from "./context/AuthContext";
 
 import "./index.css";
@@ -111,6 +111,15 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        
+        <Route
+  path="/new-contact"
+  element={
+    <ProtectedRoute>
+      <NewContact />
+    </ProtectedRoute>
+  }
+/>
 
         {/* Unknown Routes */}
         <Route

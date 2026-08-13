@@ -7,7 +7,7 @@ import connectDB from "./config/db.js";
 
 import authRoutes from "./routes/authRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
-
+import contactRoutes from "./routes/contactRoutes.js";
 import { initSocket } from "./config/socket.js";
 
 /* ================= DB ================= */
@@ -40,7 +40,7 @@ app.use(
 /* ================= ROUTES ================= */
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
-
+app.use("/api/contacts", contactRoutes);
 /* ================= BASIC TEST ================= */
 app.get("/", (req, res) => {
   res.send("API Running...");

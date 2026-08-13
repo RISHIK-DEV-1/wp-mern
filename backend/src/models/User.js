@@ -2,6 +2,8 @@ import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema(
   {
+    /* ================= BASIC USER INFO ================= */
+
     name: {
       type: String,
       required: true,
@@ -16,39 +18,41 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
 
+    /* ================= AUTHENTICATION ================= */
+
     password: {
-  type: String,
-  default: null,
-},
-
-googleId: {
-  type: String,
-  unique: true,
-  sparse: true,
-},
-
-    avatar: {
-  type: String,
-  default: "",
-},
-    lastSeen: {
-  type: Date,
-  default: Date.now,
-},
-    isVerified: {
-      type: Boolean,
-      default: false,
-    },
-
-    verificationToken: {
       type: String,
       default: null,
     },
 
-    verificationExpires: {
-      type: Date,
-      default: null,
+    /*
+     * Only Google users have this field.
+     *
+     * Email/password users simply don't have
+     * a googleId field.
+     *
+     * sparse + unique allows multiple users
+     * without googleId.
+     */
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true,
     },
+
+    /* ================= PROFILE ================= */
+
+    avatar: {
+      type: String,
+      default: "",
+    },
+
+    lastSeen: {
+      type: Date,
+      default: Date.now,
+    },
+
+    /* ================= PASSWORD RESET ================= */
 
     resetPasswordToken: {
       type: String,

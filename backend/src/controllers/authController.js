@@ -1,8 +1,10 @@
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { OAuth2Client } from "google-auth-library";
+
 import PendingUser from "../models/PendingUser.js";
 import User from "../models/User.js";
+
 import generateToken from "../utils/generateToken.js";
 import sendEmail from "../utils/sendEmail.js";
 
@@ -13,7 +15,9 @@ const googleClient = new OAuth2Client(
 /* ================= PASSWORD VALIDATION ================= */
 
 const isStrongPassword = (password) => {
-  return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(password);
+  return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(
+    password
+  );
 };
 
 /* ================= REGISTER ================= */
@@ -35,7 +39,9 @@ export const registerUser = async (req, res) => {
       });
     }
 
-    // Already verified?
+    /*
+     * USER collection contains VERIFIED USERS ONLY.
+     */
     const verifiedUser = await User.findOne({
       email,
     });
@@ -46,7 +52,10 @@ export const registerUser = async (req, res) => {
       });
     }
 
-    // Remove old pending registration if any
+    /*
+     * If the same email previously started registration
+     * but did not verify, remove the old pending record.
+     */
     await PendingUser.deleteOne({
       email,
     });
@@ -60,7 +69,7 @@ export const registerUser = async (req, res) => {
       crypto.randomBytes(32).toString("hex");
 
     await PendingUser.create({
-      name,
+      name: name.trim(),
       email,
       password: hashedPassword,
       verificationToken,
@@ -77,11 +86,12 @@ export const registerUser = async (req, res) => {
       html: `
         <h2>Welcome to WP MERN Chat</h2>
 
-        <p>Please verify your email.</p>
+        <p>Please verify your email to complete your registration.</p>
 
         <a
           href="${verifyUrl}"
           style="
+            display:inline-block;
             padding:10px 15px;
             background:#00a884;
             color:#fff;
@@ -91,6 +101,8 @@ export const registerUser = async (req, res) => {
         >
           Verify Email
         </a>
+
+        <p>This verification link expires in 1 hour.</p>
       `,
     });
 
@@ -99,6 +111,11 @@ export const registerUser = async (req, res) => {
         "Verification email sent. Please check your inbox.",
     });
   } catch (error) {
+    console.log(
+      "Register Error:",
+      error.message
+    );
+
     res.status(500).json({
       message: error.message,
     });
@@ -111,23 +128,30 @@ export const verifyEmail = async (req, res) => {
   try {
     const { token } = req.params;
 
-    const pendingUser = await PendingUser.findOne({
-      verificationToken: token,
-      verificationExpires: {
-        $gt: Date.now(),
-      },
-    });
+    const pendingUser =
+      await PendingUser.findOne({
+        verificationToken: token,
+        verificationExpires: {
+          $gt: Date.now(),
+        },
+      });
 
     if (!pendingUser) {
       return res.status(400).json({
-        message: "Invalid or expired verification link",
+        message:
+          "Invalid or expired verification link",
       });
     }
 
-    // Safety check
-    const existingUser = await User.findOne({
-      email: pendingUser.email,
-    });
+    /*
+     * Safety check:
+     * The email may have already been registered
+     * through another authentication method.
+     */
+    const existingUser =
+      await User.findOne({
+        email: pendingUser.email,
+      });
 
     if (existingUser) {
       await PendingUser.deleteOne({
@@ -139,15 +163,27 @@ export const verifyEmail = async (req, res) => {
       });
     }
 
+    /*
+     * Move the verified user from PendingUser
+     * into the master User collection.
+     *
+     * IMPORTANT:
+     * Do NOT set googleId: null.
+     */
     await User.create({
       name: pendingUser.name,
       email: pendingUser.email,
       password: pendingUser.password,
       avatar: "",
-      isVerified: true,
       lastSeen: new Date(),
+      resetPasswordToken: null,
+      resetPasswordExpires: null,
     });
 
+    /*
+     * Verification is complete.
+     * Remove the temporary pending record.
+     */
     await PendingUser.deleteOne({
       _id: pendingUser._id,
     });
@@ -156,6 +192,11 @@ export const verifyEmail = async (req, res) => {
       message: "Email verified successfully",
     });
   } catch (error) {
+    console.log(
+      "Verify Email Error:",
+      error.message
+    );
+
     res.status(500).json({
       message: error.message,
     });
@@ -169,16 +210,17 @@ export const resendVerificationEmail =
     try {
       const { email } = req.body;
 
-      const user = await PendingUser.findOne({
-        email,
-      });
+      const user =
+        await PendingUser.findOne({
+          email,
+        });
 
       if (!user) {
         return res.status(404).json({
-          message: "User not found",
+          message:
+            "No pending verification found for this email",
         });
       }
-
 
       const verificationToken =
         crypto.randomBytes(32).toString("hex");
@@ -199,13 +241,15 @@ export const resendVerificationEmail =
         to: email,
         subject:
           "Resend Email Verification",
-
         html: `
           <h2>Verify Your Email</h2>
+
+          <p>Please click the button below to verify your email.</p>
 
           <a
             href="${verifyUrl}"
             style="
+              display:inline-block;
               padding:10px 15px;
               background:#00a884;
               color:white;
@@ -215,6 +259,8 @@ export const resendVerificationEmail =
           >
             Verify Email
           </a>
+
+          <p>This verification link expires in 1 hour.</p>
         `,
       });
 
@@ -223,6 +269,11 @@ export const resendVerificationEmail =
           "Verification email sent successfully",
       });
     } catch (error) {
+      console.log(
+        "Resend Verification Error:",
+        error.message
+      );
+
       res.status(500).json({
         message: error.message,
       });
@@ -239,20 +290,21 @@ export const loginUser = async (
     const { email, password } =
       req.body;
 
-    const user = await User.findOne({
-  email,
-});
+    /*
+     * ONLY search the master User collection.
+     *
+     * Pending/unverified users cannot log in.
+     */
+    const user = await User.findOne({ email });
 
 if (!user) {
   const pendingUser =
-    await PendingUser.findOne({
-      email,
-    });
+    await PendingUser.findOne({ email });
 
   if (pendingUser) {
     return res.status(401).json({
       message:
-        "Please verify your email before logging in.",
+        "Please verify your email before logging in",
     });
   }
 
@@ -260,6 +312,16 @@ if (!user) {
     message: "Invalid credentials",
   });
 }
+
+    /*
+     * Google-only users don't have a password.
+     */
+    if (!user.password) {
+      return res.status(401).json({
+        message:
+          "This account uses Google login. Please continue with Google.",
+      });
+    }
 
     const isMatch =
       await bcrypt.compare(
@@ -274,13 +336,6 @@ if (!user) {
       });
     }
 
-    if (!user.isVerified) {
-      return res.status(401).json({
-        message:
-          "Please verify your email before logging in",
-      });
-    }
-
     res.json({
       _id: user._id,
       name: user.name,
@@ -291,6 +346,11 @@ if (!user) {
       ),
     });
   } catch (error) {
+    console.log(
+      "Login Error:",
+      error.message
+    );
+
     res.status(500).json({
       message: error.message,
     });
@@ -307,6 +367,13 @@ export const googleLogin = async (
     const { credential } =
       req.body;
 
+    if (!credential) {
+      return res.status(400).json({
+        message:
+          "Google credential is required",
+      });
+    }
+
     const ticket =
       await googleClient.verifyIdToken({
         idToken: credential,
@@ -317,65 +384,69 @@ export const googleLogin = async (
     const payload =
       ticket.getPayload();
 
+    if (!payload) {
+      return res.status(401).json({
+        message:
+          "Invalid Google credential",
+      });
+    }
+
     const {
       sub,
       name,
       email,
       picture,
+      email_verified,
     } = payload;
 
+    if (!email || !email_verified) {
+      return res.status(401).json({
+        message:
+          "Google email could not be verified",
+      });
+    }
+
+    /*
+     * Find existing verified user by email.
+     */
     let user =
       await User.findOne({
         email,
       });
 
+    /*
+     * New Google user:
+     *
+     * Google has already verified the account,
+     * so directly create a verified master user.
+     */
     if (!user) {
-
-  const pendingUser =
-    await PendingUser.findOne({
-      email,
-    });
-
-  if (pendingUser) {
-
-    user = await User.create({
-      name: pendingUser.name,
-      email: pendingUser.email,
-      password: pendingUser.password,
-      googleId: sub,
-      avatar: picture || "",
-      isVerified: true,
-      lastSeen: new Date(),
-    });
-
-    await PendingUser.deleteOne({
-      _id: pendingUser._id,
-    });
-
-  } else {
-
-    user = await User.create({
-      name,
-      email,
-      googleId: sub,
-      avatar: picture || "",
-      isVerified: true,
-      lastSeen: new Date(),
-    });
-
-  }
-
-} else {
+      user = await User.create({
+        name: name || "Google User",
+        email,
+        googleId: sub,
+        avatar: picture || "",
+        password: null,
+        lastSeen: new Date(),
+      });
+    } else {
       let updated = false;
 
-      /* Link Google account */
-      if (!user.googleId) {
+      /*
+       * Existing email/password user logging in
+       * through Google for the first time.
+       */
+      if (
+        !user.googleId
+      ) {
         user.googleId = sub;
         updated = true;
       }
 
-      /* Keep existing Cloudinary avatar.
-         Only use Google avatar if avatar is empty. */
+      /*
+       * Keep the existing Cloudinary avatar.
+       * Only use Google's picture if no avatar exists.
+       */
       if (
         !user.avatar &&
         picture
@@ -399,6 +470,11 @@ export const googleLogin = async (
       ),
     });
   } catch (error) {
+    console.log(
+      "Google Login Error:",
+      error.message
+    );
+
     res.status(500).json({
       message:
         "Google login failed",

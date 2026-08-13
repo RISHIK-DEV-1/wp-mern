@@ -36,6 +36,20 @@ export default function Chat() {
   const [showSendingToast, setShowSendingToast] =
   useState(false);
   const historyPushed = useRef(false);
+  const [openContacts, setOpenContacts] = useState(false);
+
+  useEffect(() => {
+  if (location.state?.openContacts) {
+    setOpenContacts(true);
+
+    // Clear the navigation state so refresh doesn't reopen it
+    window.history.replaceState(
+      {},
+      document.title,
+      window.location.pathname
+    );
+  }
+}, [location.state]);
   /* ================= RESTORE OPEN CHAT ================= */
 
   useEffect(() => {
@@ -272,6 +286,8 @@ useEffect(() => {
             onlineUsers={
               onlineUsers
             }
+            openContacts={openContacts}
+  setOpenContacts={setOpenContacts}
           />
         )}
           </div>
@@ -303,6 +319,8 @@ useEffect(() => {
         onlineUsers={
           onlineUsers
         }
+        openContacts={openContacts}
+  setOpenContacts={setOpenContacts}
       />
 
       <ChatWindow

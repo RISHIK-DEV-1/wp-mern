@@ -21,6 +21,8 @@ export default function Sidebar({
   setSelectedUser,
   onlineUsers,
   typingUser,
+  openContacts,
+  setOpenContacts,
 }) {
   const {
   user,
@@ -40,6 +42,13 @@ export default function Sidebar({
     useState(false);
   const [searchTerm, setSearchTerm] =
   useState("");
+
+  useEffect(() => {
+  if (openContacts) {
+    setShowModal(true);
+    setOpenContacts(false);
+  }
+}, [openContacts, setOpenContacts]);
   /* ================= FETCH CHATS ================= */
 
   const fetchChats = async () => {
@@ -64,6 +73,8 @@ export default function Sidebar({
       fetchChats();
     }
   }, [user]);
+ 
+  
 
   /* ================= FETCH UNREAD COUNTS ================= */
 

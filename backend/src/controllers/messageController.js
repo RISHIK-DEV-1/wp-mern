@@ -195,7 +195,7 @@ export const getChatPreviews = async (req, res) => {
   },
     })
       .sort({ createdAt: -1 })
-      .populate("sender receiver", "name avatar lastSeen");
+      .populate("sender receiver", "name email avatar lastSeen");
 
     const chats = {};
 

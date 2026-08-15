@@ -42,6 +42,8 @@ export default function Sidebar({
     useState(false);
   const [searchTerm, setSearchTerm] =
   useState("");
+  const [contacts, setContacts] =
+  useState([]);
 
   useEffect(() => {
   if (openContacts) {
@@ -74,7 +76,42 @@ export default function Sidebar({
     }
   }, [user]);
  
-  
+  /* ================= FETCH CONTACTS ================= */
+
+const fetchContacts = async () => {
+  if (!user?._id) return;
+
+  try {
+    const { data } = await API.get(
+      `/contacts/${user._id}`
+    );
+
+    setContacts(
+      Array.isArray(data) ? data : []
+    );
+  } catch (error) {
+    console.error(
+      "Fetch Contacts Error:",
+      error
+    );
+
+    setContacts([]);
+  }
+};
+
+useEffect(() => {
+  if (user?._id) {
+    fetchContacts();
+  }
+}, [user?._id]);
+
+const isContact = (userId) => {
+  return contacts.some(
+    (contact) =>
+      String(contact._id) ===
+      String(userId)
+  );
+};
 
   /* ================= FETCH UNREAD COUNTS ================= */
 
@@ -211,13 +248,21 @@ export default function Sidebar({
     );
   };
   const filteredChats =
-  chats.filter((chat) =>
-    chat.user.name
-      .toLowerCase()
-      .includes(
-        searchTerm.toLowerCase()
-      )
-  );
+  chats.filter((chat) => {
+    const name =
+      chat.user?.name?.toLowerCase() || "";
+
+    const email =
+      chat.user?.email?.toLowerCase() || "";
+
+    const search =
+      searchTerm.toLowerCase();
+
+    return (
+      name.includes(search) ||
+      email.includes(search)
+    );
+  });
 
   return (
     <div className="sidebar">
@@ -353,7 +398,11 @@ export default function Sidebar({
 
               <div className="chat-info">
                 <div className="chat-grid">
-  <h4>{u.name}</h4>
+  <h4>
+  {isContact(u._id)
+    ? u.name
+    : u.email}
+</h4>
 
   <small
     className={

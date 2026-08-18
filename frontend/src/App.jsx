@@ -17,6 +17,7 @@ import ProfilePage from "./pages/ProfilePage";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import ForwardScreen from "./pages/ForwardScreen";
 import Starred from "./pages/Starred";
+import NewChatModal from "./components/NewChatModal";
 import NewContact from "./pages/NewContact";
 import { AuthContext } from "./context/AuthContext";
 
@@ -112,6 +113,14 @@ export default function App() {
           }
         />
         
+       <Route
+  path="/new-chat"
+  element={
+    <ProtectedRoute>
+      <NewChatModal />
+    </ProtectedRoute>
+  }
+/>
         <Route
   path="/new-contact"
   element={

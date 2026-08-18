@@ -12,7 +12,6 @@ import socket from "../utils/socket";
 
 import { AuthContext } from "../context/AuthContext";
 import { MdBlock } from "react-icons/md";
-import NewChatModal from "./NewChatModal";
 import { FiSearch } from "react-icons/fi";
 import "./Sidebar.css";
 
@@ -21,8 +20,6 @@ export default function Sidebar({
   setSelectedUser,
   onlineUsers,
   typingUser,
-  openContacts,
-  setOpenContacts,
 }) {
   const {
   user,
@@ -38,19 +35,11 @@ export default function Sidebar({
   const [unreadCounts, setUnreadCounts] =
     useState({});
 
-  const [showModal, setShowModal] =
-    useState(false);
   const [searchTerm, setSearchTerm] =
   useState("");
   const [contacts, setContacts] =
   useState([]);
 
-  useEffect(() => {
-  if (openContacts) {
-    setShowModal(true);
-    setOpenContacts(false);
-  }
-}, [openContacts, setOpenContacts]);
   /* ================= FETCH CHATS ================= */
 
   const fetchChats = async () => {
@@ -454,25 +443,12 @@ const isContact = (userId) => {
       {/* ================= FLOATING BUTTON ================= */}
 
       <button
-        className="new-chat-btn"
-        onClick={() =>
-          setShowModal(true)
-        }
-      >
-        +
-      </button>
+  className="new-chat-btn"
+  onClick={() => navigate("/new-chat")}
+>
+  +
+</button>
 
-      {/* ================= MODAL ================= */}
-
-      <NewChatModal
-        isOpen={showModal}
-        onClose={() =>
-          setShowModal(false)
-        }
-        setSelectedUser={
-          setSelectedUser
-        }
-      />
     </div>
   );
-}
+}     

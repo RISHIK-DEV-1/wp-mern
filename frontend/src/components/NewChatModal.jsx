@@ -9,11 +9,7 @@ import { AuthContext } from "../context/AuthContext";
 
 import "./NewChatModal.css";
 
-export default function NewChatModal({
-  isOpen,
-  onClose,
-  setSelectedUser,
-}) {
+export default function NewChatModal() {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
   const [contacts, setContacts] = useState([]);
@@ -104,38 +100,37 @@ const BackIcon = () => (
   /* ================= OPEN MODAL ================= */
 
   useEffect(() => {
-    if (!isOpen || !user?._id) return;
+  if (!user?._id) return;
 
-    setSearch("");
-    setUsers([]);
-    setSearchMode(false);
+  setSearch("");
+  setUsers([]);
+  setSearchMode(false);
 
-    fetchContacts();
-  }, [isOpen, user?._id]);
+  fetchContacts();
+}, [user?._id]);
 
   /* ================= SEARCH ================= */
 
   useEffect(() => {
-    if (!isOpen || !searchMode) return;
+  if (!searchMode) return;
 
-    const searchText = search.trim();
+  const searchText = search.trim();
 
-    if (!searchText) {
-      setUsers([]);
-      return;
-    }
+  if (!searchText) {
+    setUsers([]);
+    return;
+  }
 
-    const timer = setTimeout(() => {
-      searchUsers(searchText);
-    }, 300);
+  const timer = setTimeout(() => {
+    searchUsers(searchText);
+  }, 300);
 
-    return () => clearTimeout(timer);
-  }, [
-    search,
-    searchMode,
-    isOpen,
-    user?._id,
-  ]);
+  return () => clearTimeout(timer);
+}, [
+  search,
+  searchMode,
+  user?._id,
+]);
 
   /* ================= SEARCH OPEN ================= */
 
@@ -166,11 +161,17 @@ const BackIcon = () => (
   /* ================= OPEN CHAT ================= */
 
   const openChat = (selectedUser) => {
-    setSelectedUser(selectedUser);
-    onClose();
-  };
+  localStorage.setItem(
+    "selectedChat",
+    JSON.stringify(selectedUser)
+  );
 
-  if (!isOpen) return null;
+  navigate("/chat", {
+    state: {
+      selectedUser,
+    },
+  });
+};
 
   const contactCount = contacts.length;
 
@@ -216,15 +217,8 @@ const highlightText = (text, query) => {
 };
   return (
     <div
-      className="modal-overlay"
-      onClick={onClose}
-    >
-      <div
-        className="modal-container"
-        onClick={(e) =>
-          e.stopPropagation()
-        }
-      >
+      className="modal-overlay">
+      <div className="modal-container">
         {/* ================= HEADER ================= */}
 
         {!searchMode ? (
@@ -232,7 +226,7 @@ const highlightText = (text, query) => {
             <button
               type="button"
               className="modal-icon-button"
-              onClick={onClose}
+              onClick={() => navigate("/chat")}
               aria-label="Close"
             >
              <BackIcon />
@@ -307,7 +301,6 @@ const highlightText = (text, query) => {
 <div
   className="modal-new-contact"
   onClick={() => {
-    onClose();
     navigate("/new-contact");
   }}
 >

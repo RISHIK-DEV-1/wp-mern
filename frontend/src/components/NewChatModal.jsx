@@ -165,8 +165,9 @@ const BackIcon = () => (
     "selectedChat",
     JSON.stringify(selectedUser)
   );
-
+  
   navigate("/chat", {
+   replace: true,
     state: {
       selectedUser,
     },
@@ -226,7 +227,9 @@ const highlightText = (text, query) => {
             <button
               type="button"
               className="modal-icon-button"
-              onClick={() => navigate("/chat")}
+              onClick={() =>
+  navigate("/chat", { replace: true })
+}
               aria-label="Close"
             >
              <BackIcon />

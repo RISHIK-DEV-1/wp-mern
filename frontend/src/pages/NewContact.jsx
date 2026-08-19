@@ -204,10 +204,8 @@ const closeSearch = () => {
        *
        * Return to Select Contact screen.
        */
-      navigate("/chat", {
-  state: {
-    openContacts: true,
-  },
+      navigate("/new-chat", {
+  replace: true,
 });
     } catch (error) {
       console.error(

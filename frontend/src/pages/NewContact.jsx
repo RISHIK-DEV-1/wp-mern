@@ -115,7 +115,7 @@ export default function NewContact() {
         )
     );
   };
- 
+
 /* ================= SEARCH MODE ================= */
 
 const openSearch = () => {
@@ -204,9 +204,8 @@ const closeSearch = () => {
        *
        * Return to Select Contact screen.
        */
-      navigate("/new-chat", {
-  replace: true,
-});
+     
+   navigate(-1);
     } catch (error) {
       console.error(
         "Add Contact Error:",

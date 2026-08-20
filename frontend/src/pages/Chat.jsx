@@ -19,7 +19,7 @@ export default function Chat() {
   const { user } =
     useContext(AuthContext);
   const location = useLocation();
-  
+
   const [selectedUser, setSelectedUser] =
     useState(null);
 
@@ -37,7 +37,7 @@ export default function Chat() {
   useState(false);
   const historyPushed = useRef(false);
 
-  
+
   /* ================= RESTORE OPEN CHAT ================= */
 
   useEffect(() => {
@@ -73,7 +73,7 @@ export default function Chat() {
 
   return () => clearTimeout(timer);
 }, []);
-  
+
   /* ================= SAVE OPEN CHAT ================= */
 
   useEffect(() => {
@@ -274,7 +274,7 @@ useEffect(() => {
             onlineUsers={
               onlineUsers
             }
-            
+
           />
         )}
           </div>

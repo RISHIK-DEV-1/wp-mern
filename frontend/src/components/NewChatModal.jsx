@@ -165,7 +165,7 @@ const BackIcon = () => (
     "selectedChat",
     JSON.stringify(selectedUser)
   );
-  
+
   navigate("/chat", {
    replace: true,
     state: {
@@ -298,7 +298,7 @@ const highlightText = (text, query) => {
             />
           </div>
         )}
- 
+
 {/* ================= NEW CONTACT ================= */}
 
 <div

@@ -19,8 +19,11 @@ export const getContacts = async (req, res) => {
       });
 
     res.json(
-      contacts.map((item) => item.contact)
-    );
+  contacts.map((item) => ({
+    ...item.contact.toObject(),
+    isContact: true,
+  }))
+);
   } catch (error) {
     res.status(500).json({
       message: error.message,

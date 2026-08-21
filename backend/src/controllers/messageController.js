@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import Message from "../models/Message.js";
 import { ioInstance,onlineUsers, } from "../config/socket.js";
+import Contact from "../models/Contact.js";
 /* ================= SEND MESSAGE ================= */
 
 export const sendMessage = async (req, res) => {
@@ -188,41 +189,81 @@ export const getChatPreviews = async (req, res) => {
   try {
     const { userId } = req.params;
 
+    /* ================= GET MY CONTACTS ================= */
+
+    const userContacts = await Contact.find({
+      owner: userId,
+    }).select("contact");
+
+    const contactIds = new Set(
+      userContacts.map((item) =>
+        String(item.contact)
+      )
+    );
+
+    /* ================= GET MESSAGES ================= */
+
     const messages = await Message.find({
-      $or: [{ sender: userId }, { receiver: userId }],
-    deletedFor: {
-    $ne: userId,
-  },
+      $or: [
+        { sender: userId },
+        { receiver: userId },
+      ],
+      deletedFor: {
+        $ne: userId,
+      },
     })
       .sort({ createdAt: -1 })
-      .populate("sender receiver", "name email avatar lastSeen");
+      .populate(
+        "sender receiver",
+        "name email avatar lastSeen"
+      );
 
     const chats = {};
 
     messages.forEach((message) => {
       const otherUser =
-        String(message.sender._id) === String(userId)
+        String(message.sender._id) ===
+        String(userId)
           ? message.receiver
           : message.sender;
 
       if (!chats[otherUser._id]) {
         chats[otherUser._id] = {
-          user: otherUser,
-          lastMessage: message.deletedForEveryone
-    ? String(message.sender._id) === String(userId)
-      ? "You deleted this message"
-      : "This message was deleted"
-    : message.text,
-          lastMessageTime: message.createdAt,
-          lastSender: String(message.sender._id),
-          status: message.status,
+          user: {
+            ...otherUser.toObject(),
+
+            isContact: contactIds.has(
+              String(otherUser._id)
+            ),
+          },
+
+          lastMessage:
+            message.deletedForEveryone
+              ? String(message.sender._id) ===
+                String(userId)
+                ? "You deleted this message"
+                : "This message was deleted"
+              : message.text,
+
+          lastMessageTime:
+            message.createdAt,
+
+          lastSender:
+            String(message.sender._id),
+
+          status:
+            message.status,
         };
       }
     });
 
-    res.json(Object.values(chats));
+    res.json(
+      Object.values(chats)
+    );
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      message: error.message,
+    });
   }
 };
 

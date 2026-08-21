@@ -148,6 +148,7 @@ export default function ChatHeader({
           </div>
 
           <div className="chat-header-info">
+          
             {isContact ? (
               <h4>
                 {selectedUser?.name}

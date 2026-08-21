@@ -20,6 +20,7 @@ export default function ChatWindow({
   onlineUsers,
   jumpToMessageId,
 }) {
+ 
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
   const [selectedMessages, setSelectedMessages] =
@@ -30,12 +31,11 @@ export default function ChatWindow({
   useState(false);
   const [animatedStarIds, setAnimatedStarIds] =
   useState([]);
-  const [contacts, setContacts] = useState([]);
   const selectedMessageObjects =
   messages.filter((m) =>
     selectedMessages.includes(m._id)
   );
-
+ 
   const starIconFilled =
   selectedMessageObjects.length > 0 &&
   selectedMessageObjects.every((message) =>
@@ -53,14 +53,6 @@ export default function ChatWindow({
     },
   });
 };
-
-const isSelectedUserContact =
-  !!selectedUser?._id &&
-  contacts.some(
-    (contact) =>
-      String(contact._id) ===
-      String(selectedUser._id)
-  );
 
 const canDeleteForEveryone =
   selectedMessageObjects.length > 0 &&
@@ -278,34 +270,6 @@ setTimeout(() => {
     setReplyMessage(null);
   }, [selectedUser?._id]);
  
-/* ================= FETCH CONTACTS ================= */
-
-useEffect(() => {
-  if (!user?._id) return;
-
-  const fetchContacts = async () => {
-    try {
-      const { data } = await API.get(
-        `/contacts/${user._id}`
-      );
-
-      setContacts(
-        Array.isArray(data) ? data : []
-      );
-    } catch (error) {
-      console.error(
-        "Fetch Contacts Error:",
-        error
-      );
-
-      setContacts([]);
-    }
-  };
-
-  fetchContacts();
-}, [user?._id]);
-
-
 
   return (
     <div className="chat-window">
@@ -329,7 +293,7 @@ useEffect(() => {
             openForwardScreen={openForwardScreen}
             handleToggleStar={handleToggleStar}
             starIconFilled={starIconFilled}
-            isContact={isSelectedUserContact}
+            isContact={selectedUser?.isContact === true}
           />
 
           <MessageList

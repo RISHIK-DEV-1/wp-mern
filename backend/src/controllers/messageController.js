@@ -365,15 +365,16 @@ export const getStarredMessages = async (
     const { userId } = req.params;
 
     const messages =
-      await Message.find({
-        starredBy: userId,
-      })
-        .populate("sender", "name avatar")
-        .populate("receiver", "name avatar")
-        .populate("replyTo", "text sender")
-        .sort({
-          createdAt: -1,
-        });
+  await Message.find({
+    starredBy: userId,
+  })
+    .populate("sender", "name email avatar lastSeen")
+    .populate("receiver", "name email avatar lastSeen")
+    .populate("replyTo", "text sender")
+    .sort({
+      createdAt: -1,
+    });
+   
 
     res.json(messages);
   } catch (error) {

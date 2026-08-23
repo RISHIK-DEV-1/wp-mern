@@ -40,18 +40,41 @@ export default function Chat() {
 
   /* ================= RESTORE OPEN CHAT ================= */
 
-  useEffect(() => {
+  /*useEffect(() => {
     const savedChat =
       localStorage.getItem(
         "selectedChat"
       );
 
-    if (savedChat) {
+       if (savedChat) {
       setSelectedUser(
         JSON.parse(savedChat)
       );
     }
-  }, []);
+  }, []);*/
+  useEffect(() => {
+  const savedChat = localStorage.getItem("selectedChat");
+  if (!savedChat) return;
+
+  if (isMobile) {
+    // On mobile, only restore if we're in the same session
+    // (e.g. navigating back from /starred, /profile etc.)
+    // but NOT on fresh app open
+    const isInSession = sessionStorage.getItem("appSession");
+    if (!isInSession) {
+      // Fresh open on mobile — start at sidebar
+      localStorage.removeItem("selectedChat");
+      return;
+    }
+  }
+
+  setSelectedUser(JSON.parse(savedChat));
+}, []);
+
+// Mark session as active once app is open
+useEffect(() => {
+  sessionStorage.setItem("appSession", "1");
+}, []);
 
   useEffect(() => {
   const shouldShow =

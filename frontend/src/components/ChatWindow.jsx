@@ -270,7 +270,6 @@ setTimeout(() => {
     setReplyMessage(null);
   }, [selectedUser?._id]);
  
-
   return (
     <div className="chat-window">
       {!selectedUser ? (

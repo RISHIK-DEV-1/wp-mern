@@ -287,7 +287,7 @@ const highlightText = (text, query) => {
             </button>
 
             <input
-              autoFocus
+              /*autoFocus*/
               className="modal-search-input"
               type="text"
               placeholder="Search users"

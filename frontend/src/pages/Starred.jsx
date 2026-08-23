@@ -38,8 +38,8 @@ export default function Starred() {
   const longPressTimer = useRef(null);
 
   useEffect(() => {
-    fetchStarredMessages();
-  }, []);
+  fetchStarredMessages();
+}, []);
 
   const fetchStarredMessages = async () => {
     try {
@@ -322,7 +322,6 @@ ${
 
   const otherUser =
     isMine ? message.receiver : message.sender;
-
   localStorage.setItem(
     "selectedChat",
     JSON.stringify(otherUser)

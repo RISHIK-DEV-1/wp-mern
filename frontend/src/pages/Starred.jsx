@@ -28,7 +28,7 @@ export default function Starred() {
   const { user } = useContext(AuthContext);
 
   const [messages, setMessages] = useState([]);
-
+  const [contacts, setContacts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pressedMessageId, setPressedMessageId] =
   useState(null);
@@ -39,6 +39,7 @@ export default function Starred() {
 
   useEffect(() => {
   fetchStarredMessages();
+  fetchContacts();
 }, []);
 
   const fetchStarredMessages = async () => {
@@ -55,6 +56,33 @@ export default function Starred() {
     }
   };
 
+ const fetchContacts = async () => {
+  if (!user?._id) return;
+
+  try {
+    const { data } = await API.get(
+      `/contacts/${user._id}`
+    );
+
+    setContacts(
+      Array.isArray(data) ? data : []
+    );
+  } catch (error) {
+    console.error(
+      "Fetch Contacts Error:",
+      error
+    );
+
+    setContacts([]);
+  }
+};
+const isContact = (userId) => {
+  return contacts.some(
+    (contact) =>
+      String(contact._id) ===
+      String(userId)
+  );
+};
   const toggleSelection = (id) => {
     setSelectedMessages((prev) => {
       if (prev.includes(id)) {
@@ -322,13 +350,19 @@ ${
 
   const otherUser =
     isMine ? message.receiver : message.sender;
+  const selectedChatUser = {
+  ...otherUser,
+  isContact: isContact(otherUser._id),
+};
+
   localStorage.setItem(
     "selectedChat",
-    JSON.stringify(otherUser)
+    JSON.stringify(selectedChatUser)
   );
 
   setTimeout(() => {
     navigate("/chat", {
+     replace: true,
       state: {
         jumpToMessageId: message._id,
       },

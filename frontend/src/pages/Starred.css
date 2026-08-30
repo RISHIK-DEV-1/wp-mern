@@ -135,7 +135,20 @@
   color: #8c9aa5;
   font-size: 16px;
 }
+.starred-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid #2f3b43;
+  border-top: 3px solid #00a884;
+  border-radius: 50%;
+  animation: starredSpin 0.8s linear infinite;
+}
 
+@keyframes starredSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 /* Give each bubble breathing room */
 .starred-item .message-row {
   margin-bottom: 0;

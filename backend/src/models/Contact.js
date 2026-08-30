@@ -13,16 +13,17 @@ const contactSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
   },
   {
     timestamps: true,
   }
 );
 
-/*
- * Prevent the same user from adding
- * the same contact more than once.
- */
 contactSchema.index(
   {
     owner: 1,

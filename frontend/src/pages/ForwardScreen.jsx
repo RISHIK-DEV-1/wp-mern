@@ -35,37 +35,86 @@ export default function ForwardScreen() {
   const [showSearch, setShowSearch] = useState(false);
   const [chats, setChats] =
     useState([]);
-
+  const [contacts, setContacts] = useState([]);
   const [selectedChats, setSelectedChats] =
     useState([]);
   const [showSending, setShowSending] =
   useState(false);
-
+  const [loading, setLoading] =
+  useState(true);
   useEffect(() => {
     const fetchChats = async () => {
-      try {
-        const { data } =
-          await API.get(
-            `/messages/chats/${user._id}`
-          );
+  try {
+    setLoading(true);
 
-        setChats(data);
-      } catch (err) {
-        console.error(err);
-      }
-    };
+    const { data } =
+      await API.get(
+        `/messages/chats/${user._id}`
+      );
+
+    setChats(data);
+  } catch (err) {
+    console.error(err);
+  } finally {
+    setLoading(false);
+  }
+};
 
     fetchChats();
   }, [user]);
 
-  const filteredChats =
-    chats.filter((chat) =>
-      chat.user.name
-        .toLowerCase()
-        .includes(
-          search.toLowerCase()
-        )
+ useEffect(() => {
+  if (!user?._id) return;
+
+  const fetchContacts = async () => {
+    try {
+      const { data } = await API.get(
+        `/contacts/${user._id}`
+      );
+
+      setContacts(
+        Array.isArray(data) ? data : []
+      );
+    } catch (err) {
+      console.error("Fetch Contacts Error:", err);
+      setContacts([]);
+    }
+  };
+
+  fetchContacts();
+}, [user?._id]);
+
+const getContact = (userId) => {
+  return contacts.find(
+    (contact) =>
+      String(contact._id) ===
+      String(userId)
+  );
+};
+
+const getDisplayName = (chatUser) => {
+  if (!chatUser) return "";
+
+  const contact = getContact(chatUser._id);
+
+  if (contact) {
+    return (
+      contact.contactName?.trim() ||
+      chatUser.email ||
+      ""
     );
+  }
+
+  return chatUser.email || "";
+};
+  const filteredChats =
+  chats.filter((chat) =>
+    getDisplayName(chat.user)
+      .toLowerCase()
+      .includes(
+        search.toLowerCase()
+      )
+  );
 
   const toggleChat = (id) => {
     if (
@@ -92,42 +141,53 @@ export default function ForwardScreen() {
     ]);
   };
 
-  const handleForward = () => {
+  const handleForward = async () => {
   if (selectedChats.length === 0) return;
-     if (selectedChats.length > 1) {
-  sessionStorage.setItem(
-    "showSendingToast",
-    "true"
-  );
-}
-  // Open destination immediately
-  if (selectedChats.length === 1) {
-    const chat = chats.find(
-      (c) => c.user._id === selectedChats[0]
-    );
 
-    localStorage.setItem(
-      "selectedChat",
-      JSON.stringify(chat.user)
+  if (selectedChats.length > 1) {
+    sessionStorage.setItem(
+      "showSendingToast",
+      "true"
     );
-    
-    navigate("/chat", {
-  replace: true,
-});
-  } else {
-    navigate(-1);
   }
 
-  // Fire requests in background
-  selectedChats.forEach((receiverId) => {
-    API.post("/messages/forward", {
-      sender: user._id,
-      receiver: receiverId,
-      messageIds,
-    }).catch((err) => {
-      console.error("Forward failed:", err);
-    });
-  });
+  try {
+    await Promise.all(
+      selectedChats.map((receiverId) =>
+        API.post("/messages/forward", {
+          sender: user._id,
+          receiver: receiverId,
+          messageIds,
+        })
+      )
+    );
+
+    if (selectedChats.length === 1) {
+      const chat = chats.find(
+        (c) =>
+          String(c.user._id) ===
+          String(selectedChats[0])
+      );
+
+      if (chat) {
+        localStorage.setItem(
+          "selectedChat",
+          JSON.stringify(chat.user)
+        );
+      }
+
+      navigate("/chat", {
+        replace: true,
+      });
+    } else {
+      navigate(-1);
+    }
+  } catch (err) {
+    console.error(
+      "Forward failed:",
+      err
+    );
+  }
 };
 
  return (
@@ -183,44 +243,58 @@ export default function ForwardScreen() {
     </div>
 
     {/* Chat List */}
-    <div className="forward-chat-list">
+<div className="forward-chat-list">
 
-      {filteredChats.map((chat) => {
-        const selected =
-          selectedChats.includes(chat.user._id);
-
-        return (
-          <div
-            key={chat.user._id}
-            className={`forward-chat ${
-              selected ? "selected" : ""
-            }`}
-            onClick={() =>
-              toggleChat(chat.user._id)
-            }
-          >
-
-            <div className="forward-avatar">
-              {chat.user.avatar ? (
-                <img src={chat.user.avatar} alt="" />
-              ) : (
-                chat.user.name.charAt(0).toUpperCase()
-              )}
-            </div>
-
-            <div className="forward-name">
-              {chat.user.name}
-            </div>
-
-            <div className="forward-check">
-              {selected && <MdDone />}
-            </div>
-
-          </div>
-        );
-      })}
-
+  {loading ? (
+    <div className="forward-loading">
+      <span className="forward-spinner" />
     </div>
+  ) : (
+    filteredChats.map((chat) => {
+      const displayName =
+        getDisplayName(chat.user);
+
+      const selected =
+        selectedChats.includes(chat.user._id);
+
+      return (
+        <div
+          key={chat.user._id}
+          className={`forward-chat ${
+            selected ? "selected" : ""
+          }`}
+          onClick={() =>
+            toggleChat(chat.user._id)
+          }
+        >
+
+          <div className="forward-avatar">
+            {chat.user.avatar ? (
+              <img
+                src={chat.user.avatar}
+                alt=""
+              />
+            ) : (
+              displayName
+                ?.charAt(0)
+                .toUpperCase()
+            )}
+          </div>
+
+          <div className="forward-name">
+            {displayName}
+          </div>
+
+          <div className="forward-check">
+            {selected && <MdDone />}
+          </div>
+
+        </div>
+      );
+    })
+  )}
+
+</div>
 
     {/* Floating Send */}
     {selectedChats.length > 0 && (

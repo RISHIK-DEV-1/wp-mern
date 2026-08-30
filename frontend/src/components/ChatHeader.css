@@ -67,6 +67,12 @@
 
   cursor: pointer;
 }
+.chat-header-back-icon {
+  width: 24px;
+  height: 24px;
+
+  display: block;
+}
 .typing {
   color: #00a884;
   font-style: italic;

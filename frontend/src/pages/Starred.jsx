@@ -13,6 +13,7 @@ import {
   MdBlock,
   MdStar,
   MdDelete,
+  MdChevronRight,
 } from "react-icons/md";
 
 import { useNavigate } from "react-router-dom";
@@ -76,6 +77,37 @@ export default function Starred() {
     setContacts([]);
   }
 };
+
+const getDisplayName = (chatUser) => {
+  if (!chatUser) return "";
+
+  // Current user should always be shown as "You"
+  if (
+    String(chatUser._id) ===
+    String(user._id)
+  ) {
+    return "You";
+  }
+
+  const contact = contacts.find(
+    (item) =>
+      String(item._id) ===
+      String(chatUser._id)
+  );
+
+  // Saved contact → custom contact name
+  if (contact) {
+    return (
+      contact.contactName?.trim() ||
+      chatUser.email ||
+      ""
+    );
+  }
+
+  // Non-saved contact → email
+  return chatUser.email || "";
+};
+
 const isContact = (userId) => {
   return contacts.some(
     (contact) =>
@@ -185,7 +217,7 @@ const isContact = (userId) => {
     return (
       <div className="starred-screen">
         <div className="starred-loading">
-          Loading...
+          <span className="starred-spinner" />
         </div>
       </div>
     );
@@ -297,25 +329,25 @@ const isContact = (userId) => {
                       alt=""
                     />
                   ) : (
-                    message.sender.name
-                      .charAt(0)
-                      .toUpperCase()
+                    getDisplayName(message.sender)
+  ?.charAt(0)
+  .toUpperCase()
                   )}
                 </div>
 
                 <div className="starred-info">
                   <div className="starred-users">
                     <span>
-                      {message.sender.name}
-                    </span>
+  {getDisplayName(message.sender)}
+</span>
 
-                    <span className="arrow">
-                      {" > "}
-                    </span>
+<span className="arrow">
+  <MdChevronRight />
+</span>
 
-                    <span>
-                      {message.receiver.name}
-                    </span>
+<span>
+  {getDisplayName(message.receiver)}
+</span>
                   </div>
                 </div>
 
@@ -352,8 +384,12 @@ ${
     isMine ? message.receiver : message.sender;
   const selectedChatUser = {
   ...otherUser,
-  isContact: isContact(otherUser._id),
+/*  isContact: isContact(otherUser._id),*/
+  contactName: getDisplayName(otherUser),
 };
+if (isContact(otherUser._id)) {
+  selectedChatUser.isContact = true;
+}
 
   localStorage.setItem(
     "selectedChat",
@@ -401,9 +437,7 @@ ${
                             user._id
                           )
                             ? "You"
-                            : message
-                                .sender
-                                .name}
+                              : getDisplayName(message.sender)}
                         </div>
 
                         <div className="reply-preview-text">

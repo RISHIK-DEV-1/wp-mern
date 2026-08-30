@@ -6,13 +6,19 @@ import React, {
 import {
   useNavigate,
 } from "react-router-dom";
+
 import { FiMoreVertical } from "react-icons/fi";
+import { MdBlock } from "react-icons/md";
+import {
+  FiSearch,
+  FiPlus,
+} from "react-icons/fi";
+
 import API from "../utils/axios";
 import socket from "../utils/socket";
 
 import { AuthContext } from "../context/AuthContext";
-import { MdBlock } from "react-icons/md";
-import { FiSearch } from "react-icons/fi";
+
 import "./Sidebar.css";
 
 export default function Sidebar({
@@ -22,13 +28,18 @@ export default function Sidebar({
   typingUser,
 }) {
   const {
-  user,
-  logoutUser,
-} = useContext(AuthContext);
+    user,
+    logoutUser,
+  } = useContext(AuthContext);
+
   const navigate = useNavigate();
+
   const [showMenu, setShowMenu] =
-  useState(false);
-  const [chats, setChats] = useState([]);
+    useState(false);
+
+  const [chats, setChats] =
+    useState([]);
+
   const [loading, setLoading] =
     useState(true);
 
@@ -36,19 +47,24 @@ export default function Sidebar({
     useState({});
 
   const [searchTerm, setSearchTerm] =
-  useState("");
+    useState("");
+
   const [contacts, setContacts] =
-  useState([]);
+    useState([]);
 
   /* ================= FETCH CHATS ================= */
 
   const fetchChats = async () => {
+    if (!user?._id) return;
+
     try {
       const { data } = await API.get(
         `/messages/chats/${user._id}`
       );
 
-      setChats(data);
+      setChats(
+        Array.isArray(data) ? data : []
+      );
     } catch (error) {
       console.error(
         "Failed to fetch chats:",
@@ -63,48 +79,96 @@ export default function Sidebar({
     if (user?._id) {
       fetchChats();
     }
-  }, [user]);
- 
+  }, [user?._id]);
+
   /* ================= FETCH CONTACTS ================= */
 
-const fetchContacts = async () => {
-  if (!user?._id) return;
+  const fetchContacts = async () => {
+    if (!user?._id) return;
 
-  try {
-    const { data } = await API.get(
-      `/contacts/${user._id}`
+    try {
+      const { data } = await API.get(
+        `/contacts/${user._id}`
+      );
+
+      setContacts(
+        Array.isArray(data) ? data : []
+      );
+    } catch (error) {
+      console.error(
+        "Fetch Contacts Error:",
+        error
+      );
+
+      setContacts([]);
+    }
+  };
+
+  useEffect(() => {
+    if (user?._id) {
+      fetchContacts();
+    }
+  }, [user?._id]);
+
+  /* ================= CONTACT CHECK ================= */
+
+  const getContact = (userId) => {
+    return contacts.find(
+      (contact) =>
+        String(contact._id) ===
+        String(userId)
     );
+  };
 
-    setContacts(
-      Array.isArray(data) ? data : []
+  const isContact = (userId) => {
+    return Boolean(
+      getContact(userId)
     );
-  } catch (error) {
-    console.error(
-      "Fetch Contacts Error:",
-      error
-    );
+  };
 
-    setContacts([]);
-  }
-};
+  /* ================= DISPLAY NAME ================= */
 
-useEffect(() => {
-  if (user?._id) {
-    fetchContacts();
-  }
-}, [user?._id]);
+  const getDisplayName = (chatUser) => {
+    if (!chatUser) return "";
 
-const isContact = (userId) => {
-  return contacts.some(
-    (contact) =>
-      String(contact._id) ===
-      String(userId)
-  );
-};
+    const contact =
+      getContact(chatUser._id);
+
+    if (contact) {
+      return (
+        contact.contactName?.trim() ||
+        chatUser.email ||
+        ""
+      );
+    }
+
+    return chatUser.email || "";
+  };
+
+  /* ================= PREPARE SELECTED USER ================= */
+
+  const prepareSelectedUser = (
+    chatUser
+  ) => {
+    if (!chatUser) return chatUser;
+
+    const contact =
+      getContact(chatUser._id);
+
+    return {
+      ...chatUser,
+
+      contactName:
+        contact?.contactName?.trim() ||
+        "",
+    };
+  };
 
   /* ================= FETCH UNREAD COUNTS ================= */
 
   const fetchUnreadCounts = async () => {
+    if (!user?._id) return;
+
     try {
       const { data } = await API.get(
         `/messages/unread/${user._id}`
@@ -120,7 +184,7 @@ const isContact = (userId) => {
     if (user?._id) {
       fetchUnreadCounts();
     }
-  }, [user]);
+  }, [user?._id]);
 
   /* ================= MOVE CHAT TO TOP ================= */
 
@@ -140,6 +204,7 @@ const isContact = (userId) => {
       );
 
       /* New conversation */
+
       if (index === -1) {
         fetchChats();
         return prev;
@@ -147,8 +212,11 @@ const isContact = (userId) => {
 
       const chat = {
         ...updated[index],
+
         lastMessage: messageText,
+
         lastMessageTime: messageTime,
+
         lastSender: senderId,
       };
 
@@ -161,6 +229,8 @@ const isContact = (userId) => {
   /* ================= REAL TIME ================= */
 
   useEffect(() => {
+    if (!user?._id) return;
+
     const handleUnreadUpdate = () => {
       fetchUnreadCounts();
     };
@@ -183,7 +253,7 @@ const isContact = (userId) => {
         message.sender
       );
     };
- 
+
     socket.on(
       "unreadCountUpdated",
       handleUnreadUpdate
@@ -193,7 +263,7 @@ const isContact = (userId) => {
       "receiveMessage",
       handleReceiveMessage
     );
- 
+
     return () => {
       socket.off(
         "unreadCountUpdated",
@@ -205,7 +275,9 @@ const isContact = (userId) => {
         handleReceiveMessage
       );
     };
-  }, [user]);
+  }, [user?._id]);
+
+  /* ================= FORMAT TIME ================= */
 
   const formatTime = (date) => {
     if (!date) return "";
@@ -236,105 +308,136 @@ const isContact = (userId) => {
       }
     );
   };
+
+  /* ================= FILTER CHATS ================= */
+
   const filteredChats =
-  chats.filter((chat) => {
-    const name =
-      chat.user?.name?.toLowerCase() || "";
+    chats.filter((chat) => {
+      const displayName =
+        getDisplayName(chat.user)
+          .toLowerCase();
 
-    const email =
-      chat.user?.email?.toLowerCase() || "";
+      const email =
+        chat.user?.email?.toLowerCase() ||
+        "";
 
-    const search =
-      searchTerm.toLowerCase();
+      const search =
+        searchTerm.toLowerCase();
 
-    return (
-      name.includes(search) ||
-      email.includes(search)
-    );
-  });
+      return (
+        displayName.includes(search) ||
+        email.includes(search)
+      );
+    });
 
   return (
     <div className="sidebar">
 
-  <div className="sidebar-header">
-    <h3>Chats</h3>
+      {/* ================= HEADER ================= */}
 
-    <div className="menu-wrapper">
-      <button
-        className="menu-btn"
-        onClick={() =>
-          setShowMenu(
-            (prev) => !prev
-          )
-        }
-      >
-        <FiMoreVertical />
-      </button>
+      <div className="sidebar-header">
 
-      {showMenu && (
-        <div className="dropdown-menu">
+        <h3>Chats</h3>
+
+        <div className="menu-wrapper">
+
           <button
-            onClick={() => {
-              setShowMenu(false);
-              navigate("/profile");
-            }}
+            className="menu-btn"
+            onClick={() =>
+              setShowMenu(
+                (prev) => !prev
+              )
+            }
           >
-            Profile
+            <FiMoreVertical />
           </button>
-          <button
-  onClick={() => {
-    setShowMenu(false);
-    navigate("/starred");
-  }}
->
-  Starred messages
-</button>
-          <button
-  onClick={() => {
-    socket.disconnect();
-    logoutUser();
-    window.location.replace("/login");
-  }}
->
-  Logout
-</button>
+
+          {showMenu && (
+            <div className="dropdown-menu">
+
+              <button
+                onClick={() => {
+                  setShowMenu(false);
+                  navigate("/profile");
+                }}
+              >
+                Profile
+              </button>
+
+              <button
+                onClick={() => {
+                  setShowMenu(false);
+                  navigate("/starred");
+                }}
+              >
+                Starred messages
+              </button>
+
+              <button
+                onClick={() => {
+                  socket.disconnect();
+                  logoutUser();
+                  window.location.replace(
+                    "/login"
+                  );
+                }}
+              >
+                Logout
+              </button>
+
+            </div>
+          )}
+
         </div>
-      )}
-    </div>
-  </div>
 
-  <div className="search-container">
-    <FiSearch className="search-icon" />
+      </div>
 
-    <input
-      type="text"
-      placeholder="Search chats"
-      value={searchTerm}
-      onChange={(e) =>
-        setSearchTerm(
-          e.target.value
-        )
-      }
-      className="search-input"
-    />
-  </div>
+      {/* ================= SEARCH ================= */}
+
+      <div className="search-container">
+
+        <FiSearch className="search-icon" />
+
+        <input
+          type="text"
+          placeholder="Search chats"
+          value={searchTerm}
+          onChange={(e) =>
+            setSearchTerm(
+              e.target.value
+            )
+          }
+          className="search-input"
+        />
+
+      </div>
+
       {/* ================= CHAT LIST ================= */}
 
       {loading ? (
-  <div className="sidebar-message">
-    Loading chats...
+  <div className="sidebar-loading">
+    <span className="sidebar-spinner" />
   </div>
 ) : chats.length === 0 ? (
-  <div className="sidebar-message">
-    No chats yet
-  </div>
-) : filteredChats.length === 0 ? (
-  <div className="sidebar-message">
-    No matching chats
-  </div>
-) : (
+
+        <div className="sidebar-message">
+          No chats yet
+        </div>
+
+      ) : filteredChats.length === 0 ? (
+
+        <div className="sidebar-message">
+          No matching chats
+        </div>
+
+      ) : (
+
         filteredChats.map((chat) => {
+
           const u = chat.user;
+
+          const displayName =
+            getDisplayName(u);
 
           const isOnline =
             onlineUsers.includes(
@@ -353,28 +456,49 @@ const isContact = (userId) => {
                   : ""
               }`}
               onClick={() => {
-  setSelectedUser(u);
 
-  setUnreadCounts((prev) => ({
-    ...prev,
-    [u._id]: 0,
-  }));
-}}
+                const preparedUser =
+                  prepareSelectedUser(u);
+
+                setSelectedUser(
+                  preparedUser
+                );
+
+                localStorage.setItem(
+                  "selectedChat",
+                  JSON.stringify(
+                    preparedUser
+                  )
+                );
+
+                setUnreadCounts(
+                  (prev) => ({
+                    ...prev,
+                    [u._id]: 0,
+                  })
+                );
+              }}
             >
+
+              {/* ================= AVATAR ================= */}
+
               <div className="avatar-wrapper">
+
                 <div className="avatar">
-  {u.avatar ? (
-    <img
-      src={u.avatar}
-      alt=""
-      className="avatar-img"
-    />
-  ) : (
-    u.name
-      ?.charAt(0)
-      .toUpperCase()
-  )}
-</div>
+
+                  {u.avatar ? (
+                    <img
+                      src={u.avatar}
+                      alt=""
+                      className="avatar-img"
+                    />
+                  ) : (
+                    displayName
+                      ?.charAt(0)
+                      .toUpperCase()
+                  )}
+
+                </div>
 
                 <span
                   className={`status-dot ${
@@ -383,58 +507,93 @@ const isContact = (userId) => {
                       : "offline"
                   }`}
                 />
+
               </div>
+
+              {/* ================= CHAT INFO ================= */}
 
               <div className="chat-info">
+
                 <div className="chat-grid">
-  <h4>
-  {isContact(u._id)
-    ? u.name
-    : u.email}
-</h4>
 
-  <small
-    className={
-      unreadCounts[u._id] > 0
-        ? "chat-time unread"
-        : "chat-time"
-    }
-  >
-    {formatTime(chat.lastMessageTime)}
-  </small>
+                  <h4>
+                    {displayName}
+                  </h4>
 
-  <p
-    className={`sidebar-status ${
-      isTyping ? "typing" : ""
-    }`}
-  >
-    {isTyping ? (
-      "typing..."
-    ) : chat.lastMessage ===
-        "This message was deleted" ||
-      chat.lastMessage ===
-        "You deleted this message" ? (
-      <>
-        <MdBlock className="sidebar-deleted-icon" />
-        {chat.lastMessage}
-      </>
-    ) : String(chat.lastSender) ===
-      String(user._id) ? (
-      `You: ${chat.lastMessage}`
-    ) : (
-      chat.lastMessage
-    )}
-  </p>
+                  <small
+                    className={
+                      unreadCounts[
+                        u._id
+                      ] > 0
+                        ? "chat-time unread"
+                        : "chat-time"
+                    }
+                  >
+                    {formatTime(
+                      chat.lastMessageTime
+                    )}
+                  </small>
 
-  {unreadCounts[u._id] > 0 ? (
-    <span className="unread-count">
-      {unreadCounts[u._id]}
-    </span>
-  ) : (
-    <span></span>
-  )}
-</div>
+                  <p
+                    className={`sidebar-status ${
+                      isTyping
+                        ? "typing"
+                        : ""
+                    }`}
+                  >
+
+                    {isTyping ? (
+
+                      "typing..."
+
+                    ) : chat.lastMessage ===
+                        "This message was deleted" ||
+                      chat.lastMessage ===
+                        "You deleted this message" ? (
+
+                      <>
+                        <MdBlock className="sidebar-deleted-icon" />
+                        {chat.lastMessage}
+                      </>
+
+                    ) : String(
+                        chat.lastSender
+                      ) === String(
+                        user._id
+                      ) ? (
+
+                      `You: ${chat.lastMessage}`
+
+                    ) : (
+
+                      chat.lastMessage
+
+                    )}
+
+                  </p>
+
+                  {unreadCounts[
+                    u._id
+                  ] > 0 ? (
+
+                    <span className="unread-count">
+                      {
+                        unreadCounts[
+                          u._id
+                        ]
+                      }
+                    </span>
+
+                  ) : (
+
+                    <span></span>
+
+                  )}
+
+                </div>
+
               </div>
+
             </div>
           );
         })
@@ -443,12 +602,15 @@ const isContact = (userId) => {
       {/* ================= FLOATING BUTTON ================= */}
 
       <button
-  className="new-chat-btn"
-  onClick={() => navigate("/new-chat")}
->
-  +
-</button>
+        className="new-chat-btn"
+        onClick={() =>
+          navigate("/new-chat")
+        }
+        aria-label="New chat"
+      >
+        <FiPlus />
+      </button>
 
     </div>
   );
-}     
+}

@@ -1,5 +1,6 @@
 import React, {
   useState,
+  useEffect,
 } from "react";
 
 import "./ChatHeader.css";
@@ -15,6 +16,22 @@ import {
 } from "react-icons/fi";
 import { LuForward } from "react-icons/lu";
 
+const BackIcon = () => (
+  <svg
+    viewBox="0 0 24 24"
+    className="chat-header-back-icon"
+    aria-hidden="true"
+  >
+    <path
+      d="M19 12H5M11 6L5 12L11 18"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
 export default function ChatHeader({
   selectedUser,
   setSelectedUser,
@@ -54,7 +71,15 @@ export default function ChatHeader({
 
   const email =
     selectedUser?.email || "";
-
+   
+   const displayName =
+  isContact
+    ? (
+        selectedUser?.contactName?.trim() ||
+        selectedUser?.name ||
+        ""
+      )
+    : selectedUser?.email || "";
   /*
    * Maximum email length shown in the header
    * before the expand arrow appears.
@@ -72,29 +97,29 @@ export default function ChatHeader({
   /*
    * Reset expanded email whenever chat changes.
    */
-  React.useEffect(() => {
+  useEffect(() => {
     setShowFullEmail(false);
   }, [selectedUser?._id]);
 
   return (
     <div className="chat-header">
       <button
-        className="back-btn"
-        onClick={() => {
-          if (selectionMode) {
-            setSelectedMessages([]);
-            return;
-          }
+  className="back-btn"
+  onClick={() => {
+    if (selectionMode) {
+      setSelectedMessages([]);
+      return;
+    }
 
-          setSelectedUser(null);
+    setSelectedUser(null);
 
-          localStorage.removeItem(
-            "selectedChat"
-          );
-        }}
-      >
-        ←
-      </button>
+    localStorage.removeItem(
+      "selectedChat"
+    );
+  }}
+>
+  <BackIcon />
+</button>
 
       {selectionMode ? (
         <>
@@ -151,7 +176,7 @@ export default function ChatHeader({
           
             {isContact ? (
               <h4>
-                {selectedUser?.name}
+                 {selectedUser?.contactName}
               </h4>
             ) : (
               <div className="chat-header-email">

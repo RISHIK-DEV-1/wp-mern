@@ -268,7 +268,33 @@
   color: #8696a0;
   cursor: not-allowed;
 }
+/* =========================
+   LOADING
+========================= */
 
+.forward-loading {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.forward-spinner {
+  width: 32px;
+  height: 32px;
+
+  border: 3px solid #2a3942;
+  border-top-color: #00a884;
+  border-radius: 50%;
+
+  animation: forwardSpin 0.8s linear infinite;
+}
+
+@keyframes forwardSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 /* =========================
    MOBILE
 ========================= */

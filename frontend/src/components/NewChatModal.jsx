@@ -12,31 +12,32 @@ import "./NewChatModal.css";
 export default function NewChatModal() {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
+
   const [contacts, setContacts] = useState([]);
   const [users, setUsers] = useState([]);
 
   const [search, setSearch] = useState("");
-  const [searchMode, setSearchMode] =
-    useState(false);
+  const [searchMode, setSearchMode] = useState(false);
 
   const [loading, setLoading] = useState(false);
 
-const BackIcon = () => (
-  <svg
-    viewBox="0 0 24 24"
-    className="modal-back-icon"
-    aria-hidden="true"
-  >
-    <path
-      d="M19 12H5M11 6L5 12L11 18"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
+  const BackIcon = () => (
+    <svg
+      viewBox="0 0 24 24"
+      className="modal-back-icon"
+      aria-hidden="true"
+    >
+      <path
+        d="M19 12H5M11 6L5 12L11 18"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+
   /* ================= FETCH CONTACTS ================= */
 
   const fetchContacts = async () => {
@@ -100,37 +101,37 @@ const BackIcon = () => (
   /* ================= OPEN MODAL ================= */
 
   useEffect(() => {
-  if (!user?._id) return;
+    if (!user?._id) return;
 
-  setSearch("");
-  setUsers([]);
-  setSearchMode(false);
+    setSearch("");
+    setUsers([]);
+    setSearchMode(false);
 
-  fetchContacts();
-}, [user?._id]);
+    fetchContacts();
+  }, [user?._id]);
 
   /* ================= SEARCH ================= */
 
   useEffect(() => {
-  if (!searchMode) return;
+    if (!searchMode) return;
 
-  const searchText = search.trim();
+    const searchText = search.trim();
 
-  if (!searchText) {
-    setUsers([]);
-    return;
-  }
+    if (!searchText) {
+      setUsers([]);
+      return;
+    }
 
-  const timer = setTimeout(() => {
-    searchUsers(searchText);
-  }, 300);
+    const timer = setTimeout(() => {
+      searchUsers(searchText);
+    }, 300);
 
-  return () => clearTimeout(timer);
-}, [
-  search,
-  searchMode,
-  user?._id,
-]);
+    return () => clearTimeout(timer);
+  }, [
+    search,
+    searchMode,
+    user?._id,
+  ]);
 
   /* ================= SEARCH OPEN ================= */
 
@@ -158,21 +159,59 @@ const BackIcon = () => (
     );
   };
 
+  /* ================= GET CONTACT NAME ================= */
+
+  const getContactName = (userId) => {
+    const contact = contacts.find(
+      (item) =>
+        String(item._id) ===
+        String(userId)
+    );
+
+    return (
+      contact?.contactName?.trim() ||
+      ""
+    );
+  };
+
+  /* ================= PREPARE USER FOR CHAT ================= */
+
+  const prepareUserForChat = (selectedUser) => {
+    const customName = getContactName(
+      selectedUser._id
+    );
+
+    if (customName) {
+      return {
+        ...selectedUser,
+        contactName: customName,
+      };
+    }
+
+    return {
+      ...selectedUser,
+      contactName: "",
+    };
+  };
+
   /* ================= OPEN CHAT ================= */
 
   const openChat = (selectedUser) => {
-  localStorage.setItem(
-    "selectedChat",
-    JSON.stringify(selectedUser)
-  );
+    const chatUser =
+      prepareUserForChat(selectedUser);
 
-  navigate("/chat", {
-   replace: true,
-    state: {
-      selectedUser,
-    },
-  });
-};
+    localStorage.setItem(
+      "selectedChat",
+      JSON.stringify(chatUser)
+    );
+
+    navigate("/chat", {
+      replace: true,
+      state: {
+        selectedUser: chatUser,
+      },
+    });
+  };
 
   const contactCount = contacts.length;
 
@@ -183,56 +222,64 @@ const BackIcon = () => (
   const nonContactUsers = users.filter(
     (item) => !isContact(item._id)
   );
-/*highlight*/
-const highlightText = (text, query) => {
-  if (!text || !query?.trim()) {
-    return text || "";
-  }
 
-  const escapedQuery = query.trim().replace(
-    /[.*+?^${}()|[\]\\]/g,
-    "\\$&"
-  );
+  /* ================= HIGHLIGHT ================= */
 
-  const regex = new RegExp(
-    `(${escapedQuery})`,
-    "gi"
-  );
+  const highlightText = (text, query) => {
+    if (!text || !query?.trim()) {
+      return text || "";
+    }
 
-  return text.split(regex).map(
-    (part, index) =>
-      part.toLowerCase() ===
-      query.trim().toLowerCase() ? (
-        <span
-          key={index}
-          className="modal-search-match"
-        >
-          {part}
-        </span>
-      ) : (
-        <React.Fragment key={index}>
-          {part}
-        </React.Fragment>
-      )
-  );
-};
+    const escapedQuery = query
+      .trim()
+      .replace(
+        /[.*+?^${}()|[\]\\]/g,
+        "\\$&"
+      );
+
+    const regex = new RegExp(
+      `(${escapedQuery})`,
+      "gi"
+    );
+
+    return text.split(regex).map(
+      (part, index) =>
+        part.toLowerCase() ===
+        query.trim().toLowerCase() ? (
+          <span
+            key={index}
+            className="modal-search-match"
+          >
+            {part}
+          </span>
+        ) : (
+          <React.Fragment key={index}>
+            {part}
+          </React.Fragment>
+        )
+    );
+  };
+
   return (
-    <div
-      className="modal-overlay">
+    <div className="modal-overlay">
       <div className="modal-container">
+
         {/* ================= HEADER ================= */}
 
         {!searchMode ? (
           <div className="modal-header">
+
             <button
               type="button"
               className="modal-icon-button"
               onClick={() =>
-  navigate("/chat", { replace: true })
-}
+                navigate("/chat", {
+                  replace: true,
+                })
+              }
               aria-label="Close"
             >
-             <BackIcon />
+              <BackIcon />
             </button>
 
             <div className="modal-title">
@@ -274,9 +321,11 @@ const highlightText = (text, query) => {
                 />
               </svg>
             </button>
+
           </div>
         ) : (
           <div className="modal-search-header">
+
             <button
               type="button"
               className="modal-icon-button"
@@ -287,7 +336,6 @@ const highlightText = (text, query) => {
             </button>
 
             <input
-              /*autoFocus*/
               className="modal-search-input"
               type="text"
               placeholder="Search users"
@@ -296,60 +344,65 @@ const highlightText = (text, query) => {
                 setSearch(e.target.value)
               }
             />
+
           </div>
         )}
 
-{/* ================= NEW CONTACT ================= */}
+        {/* ================= NEW CONTACT ================= */}
 
-<div
-  className="modal-new-contact"
-  onClick={() => {
-    navigate("/new-contact");
-  }}
->
-  <div className="modal-new-contact-icon">
-    <svg
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-    >
-      <circle
-        cx="10"
-        cy="8"
-        r="3"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-      />
+        <div
+          className="modal-new-contact"
+          onClick={() => {
+            navigate("/new-contact");
+          }}
+        >
+          <div className="modal-new-contact-icon">
+            <svg
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <circle
+                cx="10"
+                cy="8"
+                r="3"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+              />
 
-      <path
-        d="M4 19c0-3 2.5-5 6-5s6 2 6 5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-      />
+              <path
+                d="M4 19c0-3 2.5-5 6-5s6 2 6 5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+              />
 
-      <path
-        d="M19 8v6M16 11h6"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-      />
-    </svg>
-  </div>
+              <path
+                d="M19 8v6M16 11h6"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+              />
+            </svg>
+          </div>
 
-  <span>NEW CONTACT</span>
-</div>
+          <span>NEW CONTACT</span>
+        </div>
 
         {/* ================= CONTENT ================= */}
 
         <div className="modal-users">
+
           {loading ? (
             <div className="modal-loading">
               <span className="modal-spinner" />
             </div>
           ) : !searchMode ? (
+
+            /* ================= NORMAL CONTACT LIST ================= */
+
             contacts.length === 0 ? (
               <p className="modal-msg">
                 No contacts yet
@@ -360,51 +413,64 @@ const highlightText = (text, query) => {
                   Contacts on WhatsApp
                 </div>
 
-                {contacts.map((contact) => (
-                  <div
-                    key={contact._id}
-                    className="modal-user"
-                    onClick={() =>
-                      openChat(contact)
-                    }
-                  >
-                    <div className="modal-avatar">
-                      {contact.avatar ? (
-                        <img
-                          src={contact.avatar}
-                          alt=""
-                        />
-                      ) : (
-                        contact.name
-                          ?.charAt(0)
-                          .toUpperCase()
-                      )}
-                    </div>
+                {contacts.map((contact) => {
 
-                    <div className="modal-user-info">
-                      <h4>
-                        {contact.name}
-                      </h4>
+                  const displayName =
+                    contact.contactName?.trim() ||
+                    contact.email;
 
-                      <p>
-                        {contact.email}
-                      </p>
+                  return (
+                    <div
+                      key={contact._id}
+                      className="modal-user"
+                      onClick={() =>
+                        openChat(contact)
+                      }
+                    >
+                      <div className="modal-avatar">
+                        {contact.avatar ? (
+                          <img
+                            src={contact.avatar}
+                            alt=""
+                          />
+                        ) : (
+                          displayName
+                            ?.charAt(0)
+                            .toUpperCase()
+                        )}
+                      </div>
+
+                      <div className="modal-user-info">
+                        <h4>
+                          {displayName}
+                        </h4>
+
+                        <p>
+                          {contact.email}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </>
             )
+
           ) : !search.trim() ? (
+
             <p className="modal-msg">
               Search for a user
             </p>
+
           ) : users.length === 0 ? (
+
             <p className="modal-msg">
               No users found
             </p>
+
           ) : (
+
             <>
-              {/* CONTACT SEARCH RESULTS */}
+              {/* ================= CONTACT SEARCH RESULTS ================= */}
 
               {contactUsers.length > 0 && (
                 <>
@@ -413,53 +479,60 @@ const highlightText = (text, query) => {
                   </div>
 
                   {contactUsers.map(
-                    (searchedUser) => (
-                      <div
-                        key={searchedUser._id}
-                        className="modal-user"
-                        onClick={() =>
-                          openChat(
-                            searchedUser
-                          )
-                        }
-                      >
-                        <div className="modal-avatar">
-                          {searchedUser.avatar ? (
-                            <img
-                              src={
-                                searchedUser.avatar
-                              }
-                              alt=""
-                            />
-                          ) : (
-                            searchedUser.name
-                              ?.charAt(0)
-                              .toUpperCase()
-                          )}
-                        </div>
+                    (searchedUser) => {
 
-                        <div className="modal-user-info">
-                          <h4>
-  {highlightText(
-    searchedUser.name,
-    search
-  )}
-</h4>
+                      const displayName =
+                        getContactName(
+                          searchedUser._id
+                        ) ||
+                        searchedUser.name ||
+                        searchedUser.email;
 
-<p>
-  {highlightText(
-    searchedUser.email,
-    search
-  )}
-</p>
+                      return (
+                        <div
+                          key={searchedUser._id}
+                          className="modal-user"
+                          onClick={() =>
+                            openChat(
+                              searchedUser
+                            )
+                          }
+                        >
+                          <div className="modal-avatar">
+                            {searchedUser.avatar ? (
+                              <img
+                                src={
+                                  searchedUser.avatar
+                                }
+                                alt=""
+                              />
+                            ) : (
+                              displayName
+                                ?.charAt(0)
+                                .toUpperCase()
+                            )}
+                          </div>
+
+                          <div className="modal-user-info">
+                            <h4>
+                              {displayName}
+                            </h4>
+
+                            <p>
+                              {highlightText(
+                                searchedUser.email,
+                                search
+                              )}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    )
+                      );
+                    }
                   )}
                 </>
               )}
 
-              {/* NON CONTACT SEARCH RESULTS */}
+              {/* ================= NON CONTACT SEARCH RESULTS ================= */}
 
               {nonContactUsers.length > 0 && (
                 <>
@@ -490,18 +563,18 @@ const highlightText = (text, query) => {
 
                         <div className="modal-user-info">
                           <h4>
-  {highlightText(
-    searchedUser.name,
-    search
-  )}
-</h4>
+                            {highlightText(
+                              searchedUser.name,
+                              search
+                            )}
+                          </h4>
 
-<p>
-  {highlightText(
-    searchedUser.email,
-    search
-  )}
-</p>
+                          <p>
+                            {highlightText(
+                              searchedUser.email,
+                              search
+                            )}
+                          </p>
                         </div>
 
                         <button
@@ -522,6 +595,7 @@ const highlightText = (text, query) => {
               )}
             </>
           )}
+
         </div>
       </div>
     </div>

@@ -193,12 +193,17 @@ export const getChatPreviews = async (req, res) => {
 
     const userContacts = await Contact.find({
       owner: userId,
-    }).select("contact");
+    }).select("contact name");
 
-    const contactIds = new Set(
-      userContacts.map((item) =>
-        String(item.contact)
-      )
+    /*
+     * Map:
+     * contact user ID -> custom contact name
+     */
+    const contactMap = new Map(
+      userContacts.map((item) => [
+        String(item.contact),
+        item.name?.trim() || "",
+      ])
     );
 
     /* ================= GET MESSAGES ================= */
@@ -212,7 +217,9 @@ export const getChatPreviews = async (req, res) => {
         $ne: userId,
       },
     })
-      .sort({ createdAt: -1 })
+      .sort({
+        createdAt: -1,
+      })
       .populate(
         "sender receiver",
         "name email avatar lastSeen"
@@ -227,20 +234,34 @@ export const getChatPreviews = async (req, res) => {
           ? message.receiver
           : message.sender;
 
-      if (!chats[otherUser._id]) {
-        chats[otherUser._id] = {
+      const otherUserId =
+        String(otherUser._id);
+
+      if (!chats[otherUserId]) {
+        const customName =
+          contactMap.get(otherUserId);
+
+        chats[otherUserId] = {
           user: {
             ...otherUser.toObject(),
 
-            isContact: contactIds.has(
-              String(otherUser._id)
-            ),
+            /*
+             * Contact name belongs only
+             * to the current user.
+             */
+            contactName:
+              customName ||
+              otherUser.name,
+
+            isContact:
+              contactMap.has(otherUserId),
           },
 
           lastMessage:
             message.deletedForEveryone
-              ? String(message.sender._id) ===
-                String(userId)
+              ? String(
+                  message.sender._id
+                ) === String(userId)
                 ? "You deleted this message"
                 : "This message was deleted"
               : message.text,

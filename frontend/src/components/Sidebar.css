@@ -104,7 +104,39 @@
 .sidebar-message {
   padding: 20px;
 }
+/* ================= LOADING ================= */
 
+.sidebar-loading {
+  position: absolute;
+
+  top: 50%;
+  left: 50%;
+
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebar-spinner {
+  width: 30px;
+  height: 30px;
+
+  border-radius: 50%;
+
+  border: 3px solid rgba(255, 255, 255, 0.2);
+
+  border-top-color: #00a884;
+
+  animation: sidebar-spin 0.8s linear infinite;
+}
+
+@keyframes sidebar-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 .avatar-wrapper {
   position: relative;
 }
@@ -202,8 +234,6 @@
   background: #25d366;
   color: white;
 
-  font-size: 32px;
-
   cursor: pointer;
 
   display: flex;
@@ -213,6 +243,12 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 
   transition: 0.2s;
+}
+
+.new-chat-btn svg {
+  width: 28px;
+  height: 28px;
+  stroke-width: 2.5;
 }
 
 .new-chat-btn:hover {

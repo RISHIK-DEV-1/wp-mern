@@ -59,7 +59,7 @@ const floatingDateTimer = useRef(null);
   const messageRefs = useRef({});
   const [unreadCount, setUnreadCount] =
   useState(0);
-
+const [loading, setLoading] = useState(false);
 const [firstUnreadMessageId, setFirstUnreadMessageId] =
   useState(null);
 
@@ -91,24 +91,31 @@ const unreadDividerRef = useRef(null);
   /* ================= FETCH ================= */
 
   const fetchMessages = async () => {
-    if (!selectedUser) return;
+  if (!selectedUser) return;
 
-    try {
-      const { data } = await API.get(
-  `/messages/${user._id}/${selectedUser._id}`
-);
+  setLoading(true);
 
-setMessages(data.messages);
+  try {
+    const { data } = await API.get(
+      `/messages/${user._id}/${selectedUser._id}`
+    );
 
-setUnreadCount(data.unreadCount);
+    setMessages(data.messages);
 
-setFirstUnreadMessageId(
-  data.firstUnreadMessageId
-);
-    } catch (error) {
-      console.error("Failed to fetch messages:", error.message);
-    }
-  };
+    setUnreadCount(data.unreadCount);
+
+    setFirstUnreadMessageId(
+      data.firstUnreadMessageId
+    );
+  } catch (error) {
+    console.error(
+      "Failed to fetch messages:",
+      error.message
+    );
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     fetchMessages();
@@ -583,6 +590,11 @@ if (
   className="messages"
   ref={messagesContainerRef}
 >
+{loading && (
+  <div className="message-list-loading">
+    <div className="message-loading-spinner"></div>
+  </div>
+)}
    <div
   className={`floating-date-pill ${
     showFloatingDate ? "show" : ""

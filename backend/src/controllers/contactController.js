@@ -19,11 +19,34 @@ export const getContacts = async (req, res) => {
       });
 
     res.json(
-  contacts.map((item) => ({
-    ...item.contact.toObject(),
-    isContact: true,
-  }))
-);
+      contacts
+        .filter((item) => item.contact)
+        .map((item) => {
+          const officialName =
+            item.contact.name || "";
+
+          const customName =
+            item.name?.trim() || "";
+
+          return {
+            ...item.contact.toObject(),
+
+            /*
+             * Keep official name available.
+             */
+            officialName,
+
+            /*
+             * Name to display for this owner.
+             */
+            contactName:
+              customName ||
+              officialName,
+
+            isContact: true,
+          };
+        })
+    );
   } catch (error) {
     res.status(500).json({
       message: error.message,
@@ -38,6 +61,7 @@ export const addContact = async (req, res) => {
     const {
       userId,
       contactId,
+      name,
     } = req.body;
 
     if (!userId || !contactId) {
@@ -55,8 +79,8 @@ export const addContact = async (req, res) => {
     }
 
     /*
-     * Both users must exist in the master
-     * verified-users collection.
+     * User collection contains only
+     * verified users.
      */
     const [owner, contactUser] =
       await Promise.all([
@@ -93,10 +117,22 @@ export const addContact = async (req, res) => {
       });
     }
 
+    const customName =
+  typeof name === "string"
+    ? name.trim()
+    : "";
+
+if (!customName) {
+  return res.status(400).json({
+    message: "Name is required",
+  });
+}
+
     const newContact =
       await Contact.create({
         owner: userId,
         contact: contactId,
+        name: customName,
       });
 
     const populatedContact =
@@ -108,15 +144,21 @@ export const addContact = async (req, res) => {
       );
 
     res.status(201).json({
-      message: "Contact added successfully",
-      contact:
-        populatedContact.contact,
+      message:
+        "Contact added successfully",
+
+      contact: {
+        ...populatedContact.contact.toObject(),
+
+        contactName:
+          populatedContact.name?.trim() ||
+          populatedContact.contact.name,
+
+        isContact: true,
+      },
     });
   } catch (error) {
-    /*
-     * Protect against duplicate-key errors
-     * from the compound unique index.
-     */
+   
     if (error.code === 11000) {
       return res.status(400).json({
         message:
@@ -186,13 +228,34 @@ export const checkContact = async (
     } = req.params;
 
     const contact =
-      await Contact.exists({
+      await Contact.findOne({
         owner: userId,
         contact: contactId,
+      })
+        .populate(
+          "contact",
+          "name email avatar"
+        )
+        .select("name contact");
+
+    if (!contact) {
+      return res.json({
+        isContact: false,
+        contactName: "",
       });
+    }
 
     res.json({
-      isContact: !!contact,
+      isContact: true,
+
+      contactName:
+        contact.name?.trim() ||
+        contact.contact?.name ||
+        "",
+
+      officialName:
+        contact.contact?.name ||
+        "",
     });
   } catch (error) {
     res.status(500).json({

@@ -1,0 +1,324 @@
+/* =========================
+ADD CONTACT OVERLAY
+========================= */
+
+.add-contact-overlay {
+position: fixed;
+
+inset: 0;
+
+/*
+
+* No blur.
+* The chat remains clearly readable.
+  */
+  background: rgba(0, 0, 0, 0.18);
+
+z-index: 9000;
+}
+
+/* =========================
+BOTTOM SHEET
+========================= */
+
+.add-contact-sheet {
+position: fixed;
+
+left: 0;
+right: 0;
+bottom: 0;
+
+width: 100%;
+
+background: #202c33;
+
+border-radius: 18px 18px 0 0;
+
+z-index: 9001;
+
+box-sizing: border-box;
+
+box-shadow:
+0 -8px 30px rgba(0, 0, 0, 0.35);
+
+animation: addContactSlideUp
+0.22s ease-out;
+
+padding-bottom:
+env(safe-area-inset-bottom);
+}
+
+/* =========================
+HANDLE
+========================= */
+
+.add-contact-handle-area {
+width: 100%;
+height: 34px;
+
+display: flex;
+align-items: center;
+justify-content: center;
+
+cursor: grab;
+
+touch-action: none;
+}
+
+.add-contact-handle-area:active {
+cursor: grabbing;
+}
+
+.add-contact-handle {
+width: 42px;
+height: 4px;
+
+border-radius: 10px;
+
+background: #8696a0;
+}
+/* =========================
+HEADER
+========================= */
+
+.add-contact-header {
+padding: 12px 20px 8px;
+
+border-bottom:
+1px solid #2a3942;
+}
+
+.add-contact-header h3 {
+margin: 0;
+
+color: #e9edef;
+
+font-size: 18px;
+
+font-weight: 500;
+}
+
+/* =========================
+BODY
+========================= */
+
+.add-contact-body {
+padding: 18px 20px 22px;
+}
+
+/* =========================
+FIELD
+========================= */
+
+.add-contact-field {
+display: flex;
+
+flex-direction: column;
+
+gap: 7px;
+
+margin-bottom: 17px;
+}
+
+.add-contact-field label {
+color: #8696a0;
+
+font-size: 13px;
+}
+
+.add-contact-field input {
+width: 100%;
+
+box-sizing: border-box;
+
+padding: 11px 12px;
+
+border: 1px solid #3b4a54;
+
+border-radius: 8px;
+
+outline: none;
+
+background: #111b21;
+
+color: #e9edef;
+
+font-size: 15px;
+}
+
+.add-contact-field input:focus {
+border-color: #00a884;
+}
+
+.add-contact-field input:disabled {
+opacity: 0.75;
+
+cursor: default;
+}
+
+/* =========================
+ERROR
+========================= */
+
+.add-contact-error {
+margin-top: -5px;
+
+margin-bottom: 12px;
+
+color: #ff6b6b;
+
+font-size: 13px;
+}
+
+/* =========================
+ACTIONS
+========================= */
+
+.add-contact-actions {
+display: flex;
+
+justify-content: flex-end;
+
+align-items: center;
+
+gap: 12px;
+
+margin-top: 8px;
+}
+
+.add-contact-actions button {
+min-width: 82px;
+
+height: 40px;
+
+padding: 0 18px;
+
+border: none;
+
+border-radius: 20px;
+
+font-size: 14px;
+
+font-weight: 600;
+
+cursor: pointer;
+}
+
+.add-contact-actions button:disabled {
+opacity: 0.6;
+
+cursor: default;
+}
+
+/* =========================
+CANCEL
+========================= */
+
+.add-contact-cancel {
+background: transparent;
+
+color: #00a884;
+}
+
+.add-contact-cancel:hover:not(:disabled) {
+background: rgba(
+0,
+168,
+132,
+0.08
+);
+}
+
+/* =========================
+SAVE
+========================= */
+
+.add-contact-save {
+background: #00a884;
+
+color: white;
+}
+
+.add-contact-save:hover:not(:disabled) {
+background: #06cf9c;
+}
+
+/* =========================
+LOADING SPINNER
+========================= */
+
+.add-contact-spinner {
+width: 17px;
+height: 17px;
+
+border: 2px solid
+rgba(255, 255, 255, 0.35);
+
+border-top-color: white;
+
+border-radius: 50%;
+
+display: inline-block;
+
+animation:
+addContactSpin 0.7s linear infinite;
+}
+
+/* =========================
+ANIMATIONS
+========================= */
+
+@keyframes addContactSlideUp {
+from {
+transform: translateY(100%);
+opacity: 0.7;
+}
+
+to {
+transform: translateY(0);
+opacity: 1;
+}
+}
+
+@keyframes addContactSpin {
+to {
+transform: rotate(360deg);
+}
+}
+
+/* =========================
+DESKTOP
+========================= */
+
+@media (min-width: 701px) {
+.add-contact-sheet {
+left: auto;
+right: 20px;
+bottom: 20px;
+
+width: 380px;
+
+border-radius: 16px;
+
+animation:
+  addContactDesktopIn
+  0.2s ease-out;
+
+}
+
+.add-contact-handle {
+display: none;
+}
+}
+
+@keyframes addContactDesktopIn {
+from {
+transform: translateY(20px);
+opacity: 0;
+}
+
+to {
+transform: translateY(0);
+opacity: 1;
+}
+}

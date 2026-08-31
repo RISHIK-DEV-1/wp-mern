@@ -281,6 +281,7 @@ setTimeout(() => {
       ) : (
         <>
           <ChatHeader
+            user={user}
             selectedUser={selectedUser}
             setSelectedUser={setSelectedUser}
             typing={typingUser === selectedUser?._id}

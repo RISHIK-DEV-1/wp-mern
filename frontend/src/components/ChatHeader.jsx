@@ -13,9 +13,10 @@ import {
 import {
   FiChevronRight,
   FiChevronLeft,
+  FiMoreVertical,
 } from "react-icons/fi";
 import { LuForward } from "react-icons/lu";
-
+import AddContact from "./3dotMenu/AddContact";
 const BackIcon = () => (
   <svg
     viewBox="0 0 24 24"
@@ -33,6 +34,7 @@ const BackIcon = () => (
   </svg>
 );
 export default function ChatHeader({
+  user,
   selectedUser,
   setSelectedUser,
   typing,
@@ -48,7 +50,9 @@ export default function ChatHeader({
 }) {
   const [showFullEmail, setShowFullEmail] =
     useState(false);
-
+  const [showMenu, setShowMenu] = useState(false);
+const [showAddContact, setShowAddContact] =
+  useState(false);
   const isOnline = onlineUsers.includes(
     String(selectedUser?._id)
   );
@@ -93,6 +97,22 @@ export default function ChatHeader({
   isLongEmail && !showFullEmail
     ? `${email.slice(0, MAX_EMAIL_LENGTH)}...`
     : email;
+   
+  /* ================= CONTACT ADDED ================= */
+
+const handleContactAdded = (contact) => {
+  setSelectedUser((prev) => ({
+    ...prev,
+    ...contact,
+    isContact: true,
+    contactName:
+      contact?.contactName ||
+      contact?.name ||
+      prev?.name ||
+      "",
+  }));
+};
+
 
   /*
    * Reset expanded email whenever chat changes.
@@ -172,11 +192,11 @@ export default function ChatHeader({
             )}
           </div>
 
-          <div className="chat-header-info">
-          
+                   <div className="chat-header-info">
+
             {isContact ? (
               <h4>
-                 {selectedUser?.contactName}
+                {selectedUser?.contactName}
               </h4>
             ) : (
               <div className="chat-header-email">
@@ -207,10 +227,10 @@ export default function ChatHeader({
                     }
                   >
                     {showFullEmail ? (
-  <FiChevronLeft />
-) : (
-  <FiChevronRight />
-)}
+                      <FiChevronLeft />
+                    ) : (
+                      <FiChevronRight />
+                    )}
                   </button>
                 )}
               </div>
@@ -229,9 +249,72 @@ export default function ChatHeader({
                     lastSeen
                   )}
             </p>
+
           </div>
+
+          {/* ================= 3 DOT MENU ================= */}
+
+          <div className="header-menu-wrapper">
+
+            <button
+              type="button"
+              className="header-menu-btn"
+              onClick={() =>
+                setShowMenu((prev) => !prev)
+              }
+              aria-label="More options"
+            >
+              <FiMoreVertical />
+            </button>
+
+            {showMenu && (
+              <div className="header-dropdown-menu">
+    
+                <button
+      type="button"
+      onClick={() => {
+        setShowMenu(false);
+
+     //place holder for future search feature
+      }}
+    >
+      Search
+    </button>
+                {!isContact && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowMenu(false);
+                      setShowAddContact(true);
+                    }}
+                  >
+                    Add contact
+                  </button>
+                )}
+
+              </div>
+            )}
+
+          </div>
+
         </>
       )}
+
+      {/* ================= ADD CONTACT ================= */}
+
+      {showAddContact && (
+        <AddContact
+          user={user}
+          selectedUser={selectedUser}
+          onClose={() =>
+            setShowAddContact(false)
+          }
+          onContactAdded={
+            handleContactAdded
+          }
+        />
+      )}
+
     </div>
   );
 }

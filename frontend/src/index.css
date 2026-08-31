@@ -50,3 +50,20 @@ a {
   background: #2a3942;
   border-radius: 10px;
 }
+/* =========================
+   DISABLE BROWSER LONG-PRESS
+========================= */
+
+* {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Allow normal text editing in fields */
+
+input,
+textarea {
+  -webkit-user-select: text;
+  user-select: text;
+}

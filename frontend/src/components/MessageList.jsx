@@ -221,18 +221,11 @@ useEffect(() => {
 
   setShowScrollButton(distance > 80);
 
-  // Show floating date while scrolling
-  setShowFloatingDate(true);
-
-  clearTimeout(floatingDateTimer.current);
-
-  floatingDateTimer.current = setTimeout(() => {
-    setShowFloatingDate(false);
-  }, 700);
-
   // Find first visible date
   const separators =
     container.querySelectorAll(".date-separator");
+
+  let visibleSeparator = null;
 
   for (const separator of separators) {
     const rect =
@@ -242,11 +235,74 @@ useEffect(() => {
       container.getBoundingClientRect();
 
     if (rect.top >= containerRect.top - 5) {
+      visibleSeparator = separator;
       setFloatingDate(
         separator.dataset.date
       );
       break;
     }
+  }
+
+  // Detect beginning of a new scroll movement
+  if (
+    floatingDateTimer.current === null ||
+    typeof floatingDateTimer.current !== "object"
+  ) {
+    floatingDateTimer.current = {
+      timer: null,
+      startScrollTop: container.scrollTop,
+      startDate: visibleSeparator
+        ?.dataset.date || "",
+    };
+  }
+
+  const startScrollTop =
+    floatingDateTimer.current.startScrollTop;
+
+  const startDate =
+    floatingDateTimer.current.startDate;
+
+  const scrollDistance =
+    Math.abs(
+      container.scrollTop -
+      startScrollTop
+    );
+
+  const halfScreen =
+    container.clientHeight / 2;
+
+  // Check whether a different date separator
+  // has appeared during this movement
+  const dateChanged =
+    visibleSeparator &&
+    visibleSeparator.dataset.date !==
+      startDate;
+
+  if (
+    scrollDistance >= halfScreen ||
+    dateChanged
+  ) {
+    setShowFloatingDate(true);
+
+    clearTimeout(
+      floatingDateTimer.current.timer
+    );
+
+    floatingDateTimer.current.timer =
+      setTimeout(() => {
+        setShowFloatingDate(false);
+
+        floatingDateTimer.current = {
+          timer: null,
+          startScrollTop:
+            container.scrollTop,
+          startDate:
+            visibleSeparator
+              ?.dataset.date || "",
+        };
+      }, 700);
+  } else {
+    setShowFloatingDate(false);
   }
 };
 

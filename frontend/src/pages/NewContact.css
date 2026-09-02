@@ -65,8 +65,10 @@
   -webkit-appearance: none;
 }
 
-.new-contact-icon-button:hover {
-  background: #2a3942;
+@media (min-width: 701px) {
+  .new-contact-icon-button:hover {
+    background: #2a3942;
+  }
 }
 
 .new-contact-icon {
@@ -152,8 +154,10 @@
   transition: background 0.15s ease;
 }
 
-.new-contact-user:hover {
-  background: #202c33;
+@media (min-width: 701px) {
+  .new-contact-user:hover {
+    background: #202c33;
+  }
 }
 
 /* ================= AVATAR ================= */

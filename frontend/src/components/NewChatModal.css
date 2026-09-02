@@ -78,8 +78,10 @@
   -webkit-appearance: none;
 }
 
-.modal-icon-button:hover {
-  background: #202c33 !important;
+@media (min-width: 701px) {
+  .modal-icon-button:hover {
+    background: #202c33 !important;
+  }
 }
 
 .modal-icon-button:focus,
@@ -239,8 +241,10 @@
   transition: background 0.15s ease;
 }
 
-.modal-new-contact:hover {
-  background: #2a3942;
+@media (min-width: 701px) {
+  .modal-new-contact:hover {
+    background: #2a3942;
+  }
 }
 
 .modal-new-contact-icon {
@@ -314,8 +318,10 @@
   transition: background 0.15s ease;
 }
 
-.modal-user:hover {
-  background: #2a3942;
+@media (min-width: 701px) {
+  .modal-user:hover {
+    background: #2a3942;
+  }
 }
 
 /* ================= NON CONTACT ================= */
